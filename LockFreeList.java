@@ -1,13 +1,21 @@
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
 public class LockFreeList {
     Node head;
+    AtomicInteger itemCount;
 
-    public LockFreeList(Node head) 
+    public LockFreeList(Node head, int itemCount) 
     {
         if(head == null)
         {
-            head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
+            this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
+            this.itemCount = new AtomicInteger(0);
+        }
+        else
+        {
+            this.head = head;
+            this.itemCount = new AtomicInteger(itemCount);
         }
     }
 
@@ -59,6 +67,31 @@ public class LockFreeList {
                 }
             }
             prev = current;
+        }
+    }
+
+    public boolean insert(Node nodeToInsert)
+    {
+        int key = nodeToInsert.key;
+        // If the key is already in the set, there is no insertion needed
+        if(find(key))
+        {
+            return false;
+        }
+        // Set next reference for node
+        Node nextInList = this.head.next.getReference();
+        nodeToInsert.next = new AtomicMarkableReference<>(nextInList, false);
+        if(head.next.compareAndSet(nextInList, nodeToInsert, false, false))
+        {
+            // The head's next reference still points to nodeToInsert and head has not
+            // been marked for deletion. If the CAS operation returns true, head's next
+            // reference points to the inserted node
+            return true;
+        }
+        else
+        {
+            // Try again
+            return insert(nodeToInsert);
         }
     }
 
