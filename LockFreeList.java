@@ -1,8 +1,6 @@
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
-import javax.swing.plaf.InsetsUIResource;
-
 public class LockFreeList {
     Node head;
     AtomicInteger itemCount;
