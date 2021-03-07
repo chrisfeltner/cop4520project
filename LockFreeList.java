@@ -19,6 +19,12 @@ public class LockFreeList {
         }
     }
 
+    public LockFreeList()
+    {
+        this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
+        this.itemCount = new AtomicInteger(0);
+    }
+
     public boolean find(int keyToFind)
     {
         Node prev = this.head;
@@ -124,5 +130,21 @@ public class LockFreeList {
     {
         node.key = 0;
         node.next = null;
+    }
+
+    public String toString()
+    {
+        Node current = this.head;
+        boolean markHolder[] = { false };
+        String string = "";
+        while(current != null)
+        {
+            Node next = current.next.get(markHolder);
+            boolean mark = markHolder[0];
+            string += "("+current.key+", "+mark+") -> ";
+            current = next;
+        }
+        string += "NULL";
+        return string;
     }
 }
