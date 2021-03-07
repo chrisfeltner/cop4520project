@@ -1,6 +1,8 @@
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
+import javax.swing.plaf.InsetsUIResource;
+
 public class LockFreeList {
     Node head;
     AtomicInteger itemCount;
@@ -90,8 +92,33 @@ public class LockFreeList {
         }
         else
         {
-            // Try again
+            // Try again; We can assume that it is illegal to delete head
             return insert(nodeToInsert);
+        }
+    }
+
+    public boolean insertAt(Node nodeToInsert, Node insertAfter)
+    {
+        int key = nodeToInsert.key;
+        // If the key is already in the set, there is no insertion needed
+        if(find(key))
+        {
+            return false;
+        }
+        Node nextInList = insertAfter.next.getReference();
+        nodeToInsert.next = new AtomicMarkableReference<>(nextInList, false);
+        if(insertAfter.next.compareAndSet(nextInList, nodeToInsert, false, false))
+        {
+            // insertAfter's next reference still points to nodeToInsert and insertAfter has not
+            // been marked for deletion. If the CAS operation returns true, insertAfter's next
+            // reference points to the inserted node
+            return true;
+        }
+        else
+        {
+            // insertAfter may have been deleted from the list, so trying again will probably result in
+            // a stack overflow. We should allow the caller to handle the failure to insert.
+            return false;
         }
     }
 
