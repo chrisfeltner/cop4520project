@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 
 public class SplitOrderHashMap {
-  int MAX_LOAD = 100;
+  double MAX_LOAD = .9;
 
   AtomicInteger itemCount;
   AtomicInteger size;
@@ -24,11 +24,11 @@ public class SplitOrderHashMap {
   public SplitOrderHashMap(Node head, int itemCount) {
     this.lockFreeList = new LockFreeList(head, itemCount);
     this.itemCount = new AtomicInteger(0);
-    this.size = new AtomicInteger(0);
+    this.size = new AtomicInteger(2);
 
     // init buckets with Null (UNINITIALIZED)
     this.buckets = new ArrayList<Node>(9);
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < this.size.intValue(); i++) {
       this.buckets.add(null);
     }
     initialize_bucket(0);
@@ -40,8 +40,11 @@ public class SplitOrderHashMap {
   public SplitOrderHashMap() {
     this.lockFreeList = new LockFreeList();
     this.itemCount = new AtomicInteger(0);
-    this.size = new AtomicInteger(0);
+    this.size = new AtomicInteger(2);
     this.buckets = new ArrayList<Node>(9);
+    for (int i = 0; i < this.size.intValue(); i++) {
+      this.buckets.add(null);
+    }
     // initialize the 0th bucket to a reference to "0" key at beginning.
     // is it alright if this is 0
     initialize_bucket(0);
@@ -55,7 +58,7 @@ public class SplitOrderHashMap {
     return this.size.intValue();
   }
   private int _getParent(int bucket_num) {
-    return bucket_num % this.buckets.size();
+    return bucket_num % size();
   }
 
   private int _bitKey(int number) {
@@ -68,24 +71,23 @@ public class SplitOrderHashMap {
   private void initialize_bucket(int bucket) {
     // this would be binary
     int bk_bucket = _bitKey(bucket);
-
-    int parent = _getParent(bk_bucket);
-    Node bucket_loc = this.buckets.get(parent);
-    if (bucket_loc == null) {
-      // recursively initialize parent bucket if it doesn't already exist. modulo
-      initialize_bucket(parent);
-    }
+    int parent;
+    if (bucket > size())
+      parent = _getParent(bk_bucket);
+    else
+      parent = bucket;
 
     // make this bits
     int bk_parent = _bitKey(parent);
 
-    Node dummy = new Node(bk_parent);
+    Node dummy = new Node(bk_bucket, 1);
     // if insert doesn't fail, dummy node with parent key now in list.
     //                            node to insert / insert after
     if (!this.lockFreeList.insertAt(dummy, this.buckets.get(bk_parent))) {
       // does this violate our linearizability??? if another thread calls find()
       // delete dummy if insert failed. reset with curr from the find operation in insert call
       dummy = this.lockFreeList.curr;
+      dummy.dummy = true;
     }
 
     // finally, init bucket with dummy node
@@ -146,16 +148,21 @@ public class SplitOrderHashMap {
     }
 
     // fail to insertAt into the lockFreeList, return 0
-    if (!this.lockFreeList.insertAt(this.buckets.get(_bitKey(bucket)), newNode))
+    if (!this.lockFreeList.insertAt(newNode, this.buckets.get(bucket)))
     {
       // delete node
       return 0;
     }
 
-    int csize = this.itemCount.intValue();
-    if (this.itemCount.getAndIncrement() / csize  > MAX_LOAD)
+    int csize = size();
+    if ((double) (this.itemCount.getAndIncrement() / csize)  > MAX_LOAD) {
       this.size.compareAndSet(csize, 2 * csize);
-
+      // double size of array list add nulls
+      // TODO: how does this resizing work with binary???
+      for (int i = 0; i < csize; i++) {
+        this.buckets.add(null);
+      }
+    }
     return 1;
   }
 
@@ -163,6 +170,18 @@ public class SplitOrderHashMap {
    * Returns a string representation of the list.
    */
   public String toString() {
-    return this.lockFreeList.toString();
+    String s = "======================================================\nBUCKETS: \n";
+    int i = 0;
+    for (Node bucket : buckets) {
+      String b;
+      if (bucket == null) {
+        b = "null";
+      } else {
+        b = bucket.toString();
+      }
+      s = s.concat("bucket" + i + ": " + b + "\n");
+      i+=1;
+    }
+    return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
   }
 }

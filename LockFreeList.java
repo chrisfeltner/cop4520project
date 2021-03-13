@@ -106,6 +106,16 @@ public class LockFreeList {
    * @return True if successful
    */
   public boolean insertAt(Node nodeToInsert, Node insertAfter) {
+    if (insertAfter == null)
+      return insert(nodeToInsert);
+    Node prev = null;
+    while (insertAfter != null && nodeToInsert.key < insertAfter.key) {
+      prev = insertAfter;
+      insertAfter = insertAfter.next.getReference();
+    }
+    if (insertAfter == null) {
+      insertAfter = prev;
+    }
     int key = nodeToInsert.key;
     // If the key is already in the set, there is no insertion needed
     if (find(key)) {
