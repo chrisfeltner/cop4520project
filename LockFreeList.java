@@ -4,10 +4,10 @@ import java.util.concurrent.atomic.AtomicMarkableReference;
 public class LockFreeList {
   Node head;
   AtomicInteger itemCount;
-
+  Node curr;
   /**
    * Create a new LockFreeList using the head of an existing LockFreeList.
-   * 
+   *
    * @param head      The head of an existing LockFreeList
    * @param itemCount The number of items in an existing list
    */
@@ -19,16 +19,18 @@ public class LockFreeList {
       this.head = head;
       this.itemCount = new AtomicInteger(itemCount);
     }
+    this.curr = head;
   }
 
   public LockFreeList() {
     this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
     this.itemCount = new AtomicInteger(0);
+    this.curr = head;
   }
 
   /**
    * Check if a key is in the list.
-   * 
+   *
    * @param keyToFind The value to find in the list
    * @return true if key is in list
    */
@@ -36,16 +38,16 @@ public class LockFreeList {
     Node prev = this.head;
     boolean[] markHolder = { false };
     while (true) {
-      Node current = prev.next.get(markHolder);
+      curr = prev.next.get(markHolder);
       // Condition 1: We reach the end of the list without finding key
-      if (current == null) {
+      if (curr == null) {
         return false;
       }
-      Node next = current.next.get(markHolder);
+      Node next = curr.next.get(markHolder);
       boolean currentMark = markHolder[0];
-      int currentKey = current.key;
+      int currentKey = curr.key;
       // Condition 2: The previous node is marked or is no longer the previous node
-      if (prev.next.get(markHolder) != current || markHolder[0] == true) {
+      if (prev.next.get(markHolder) != curr || markHolder[0] == true) {
         // Start over
         find(keyToFind);
       }
@@ -54,25 +56,25 @@ public class LockFreeList {
         if (currentKey >= keyToFind) {
           return currentKey == keyToFind;
         } else {
-          prev = current.next.get(markHolder);
+          prev = curr.next.get(markHolder);
         }
       } else {
         // The current node has been marked for deletion!
-        if (prev.next.compareAndSet(current, next, false, false)) {
+        if (prev.next.compareAndSet(curr, next, false, false)) {
           // Node will be garbage collected by Java runtime
-          deleteNode(current);
+          deleteNode(curr);
         } else {
           // Deletion failed; try again
           find(keyToFind);
         }
       }
-      prev = current;
+      prev = curr;
     }
   }
 
   /**
    * Insert a node after the head of the list.
-   * 
+   *
    * @param nodeToInsert A new node with key set, but next reference null
    * @return True if successfully inserted
    */
@@ -98,7 +100,7 @@ public class LockFreeList {
 
   /**
    * Insert a node after another node.
-   * 
+   *
    * @param nodeToInsert The new node with next pointer null
    * @param insertAfter  The node to insert nodeToInsert after
    * @return True if successful
@@ -128,7 +130,7 @@ public class LockFreeList {
 
   /**
    * Delete the node with specified key if it exists.
-   * 
+   *
    * @param keyToDelete The key of the node we are trying to delete
    * @return True if successful
    */
@@ -182,7 +184,7 @@ public class LockFreeList {
    * Try to delete the node with specified key from the list starting at the
    * specified starting point (used for deletion from hash table using shortcut
    * references).
-   * 
+   *
    * @param startingPoint Node reference where we will begin our traversal
    * @param keyToDelete   The key of the node we are trying to delete
    * @return True if successful
