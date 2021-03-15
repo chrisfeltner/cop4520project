@@ -4,6 +4,7 @@ public class Node {
   public AtomicMarkableReference<Node> next;
   public int key;
   public boolean dummy;
+
   // value nodes assigned true to MSB, when reversed becomes LSB
   public Node(int key, AtomicMarkableReference<Node> next) {
     this.key = key;
@@ -13,14 +14,15 @@ public class Node {
 
   public Node(int key) {
     this.key = key;
-    this.next = null;
+    this.next = new AtomicMarkableReference<Node>(null, false);
     this.dummy = false;
   }
 
   public Node(int key, int dummy) {
     this.key = key;
-    this.next = null;
-    // in the actual implementation....this would be by setting the reversed LSB to 1;
+    this.next = new AtomicMarkableReference<Node>(null, false);
+    // in the actual implementation....this would be by setting the reversed LSB to
+    // 1;
     // we would have to parse the key to tell if its a dummy or not...
     if (dummy == 1)
       this.dummy = true;
