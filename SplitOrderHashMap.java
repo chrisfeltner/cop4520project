@@ -1,12 +1,8 @@
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicMarkableReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.concurrent.locks.Lock;
 import java.util.ArrayList;
-
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SplitOrderHashMap {
-  double MAX_LOAD = .9;
+  final double MAX_LOAD = .9;
 
   AtomicInteger itemCount;
   AtomicInteger size;
@@ -15,8 +11,9 @@ public class SplitOrderHashMap {
 
   // dynamically sized buckets array
   ArrayList<Node> buckets;
+
   /**
-   * Create a Split Ordered hash with initial Node
+   * Create a Split Ordered hash with initial Node.
    *
    * @param head      The head of an existing LockFreeList (Node)
    * @param itemCount The number of items in an existing list
@@ -35,7 +32,7 @@ public class SplitOrderHashMap {
   }
 
   /**
-   * Create a Split Ordered hash from scratch
+   * Create a Split Ordered hash from scratch.
    */
   public SplitOrderHashMap() {
     this.lockFreeList = new LockFreeList();
@@ -57,6 +54,7 @@ public class SplitOrderHashMap {
   public int size() {
     return this.size.intValue();
   }
+
   private int _getParent(int bucket_num) {
     return bucket_num % size();
   }
@@ -82,10 +80,11 @@ public class SplitOrderHashMap {
 
     Node dummy = new Node(bk_bucket, 1);
     // if insert doesn't fail, dummy node with parent key now in list.
-    //                            node to insert / insert after
+    // node to insert / insert after
     if (!this.lockFreeList.insertAt(dummy, this.buckets.get(bk_parent))) {
       // does this violate our linearizability??? if another thread calls find()
-      // delete dummy if insert failed. reset with curr from the find operation in insert call
+      // delete dummy if insert failed. reset with curr from the find operation in
+      // insert call
       dummy = this.lockFreeList.curr;
       dummy.dummy = true;
     }
@@ -93,13 +92,14 @@ public class SplitOrderHashMap {
     // finally, init bucket with dummy node
     this.buckets.set(bk_bucket, dummy);
 
-    // pseudocode get parent macro that unsets buckets most sig, turned on bit. if exact
-    // dummy node already exists in list, maybe another process already tried to initialize same bucket
+    // pseudocode get parent macro that unsets buckets most sig, turned on bit. if
+    // exact
+    // dummy node already exists in list, maybe another process already tried to
+    // initialize same bucket
     // in this case, fail and p
 
     // parent = GET_PARENT(bucket)
   }
-
 
   public int find(int key) {
     int bucket = key % size();
@@ -134,7 +134,6 @@ public class SplitOrderHashMap {
 
     return 1;
 
-
   }
 
   public int insert(int key) {
@@ -148,14 +147,13 @@ public class SplitOrderHashMap {
     }
 
     // fail to insertAt into the lockFreeList, return 0
-    if (!this.lockFreeList.insertAt(newNode, this.buckets.get(bucket)))
-    {
+    if (!this.lockFreeList.insertAt(newNode, this.buckets.get(bucket))) {
       // delete node
       return 0;
     }
 
     int csize = size();
-    if ((double) (this.itemCount.getAndIncrement() / csize)  > MAX_LOAD) {
+    if ((double) (this.itemCount.getAndIncrement() / csize) > MAX_LOAD) {
       this.size.compareAndSet(csize, 2 * csize);
       // double size of array list add nulls
       // TODO: how does this resizing work with binary???
@@ -180,7 +178,7 @@ public class SplitOrderHashMap {
         b = bucket.toString();
       }
       s = s.concat("bucket" + i + ": " + b + "\n");
-      i+=1;
+      i += 1;
     }
     return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
   }
