@@ -1,10 +1,12 @@
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
+import java.util.BitSet;
 
 public class LockFreeList {
   Node head;
   AtomicInteger itemCount;
   Node curr;
+
   /**
    * Create a new LockFreeList using the head of an existing LockFreeList.
    *
@@ -13,7 +15,7 @@ public class LockFreeList {
    */
   public LockFreeList(Node head, int itemCount) {
     if (head == null) {
-      this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
+      this.head = new Node(0, new AtomicMarkableReference<Node>(null, false), false);
       this.itemCount = new AtomicInteger(0);
     } else {
       this.head = head;
@@ -23,19 +25,73 @@ public class LockFreeList {
   }
 
   public LockFreeList() {
-    this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
+    this.head = new Node(0, new AtomicMarkableReference<Node>(null, false), false);
     this.itemCount = new AtomicInteger(0);
     this.curr = head;
+  }
+
+  public static BitSet intToBitSet(int value, boolean isDummy) {
+    BitSet newBitSet = new BitSet(32);
+    int index = 32;
+    while (value != 0) {
+      if (value % 2 != 0) // get the bit of the last index
+      {
+        newBitSet.set(index);
+      }
+      index--;
+      value = value >>> 1; // logical shift right by 1
+    }
+    if (!isDummy) {
+      newBitSet.set(0);
+    }
+    return newBitSet;
+  }
+
+  /**
+   * Check if a curr is greater than key.
+   *
+   * @param lhs left hand side of the equation
+   * @param rhs right hand side of the equation
+   * @return true if curr is greater than key
+   */
+  public static boolean greaterThan(BitSet lhs, BitSet rhs) {
+    BitSet xor = (BitSet) lhs.clone();
+    xor.xor(rhs);
+    int firstDifferent = xor.length() - 1;
+    if (rhs.get(firstDifferent)) {
+      return false; // rhs is greater
+    } else {
+      return true; // lhs is greater
+    }
+  }
+
+  /**
+   * Check if a curr is less than key.
+   *
+   * @param lhs left hand side of the equation
+   * @param rhs right hand side of the equation
+   * @return true if curr is greater than key
+   */
+  public static boolean lessThan(BitSet lhs, BitSet rhs) {
+    BitSet xor = (BitSet) lhs.clone();
+    xor.xor(rhs);
+    int firstDifferent = xor.length() - 1;
+    if (rhs.get(firstDifferent)) {
+      return true; // lhs is less than rhs
+    } else {
+      return false; // rhs is less than lhs
+    }
   }
 
   /**
    * Check if a key is in the list.
    *
-   * @param keyToFind The value to find in the list
+   * @param dataToFind The value to find in the list
    * @return true if key is in list
    */
-  public boolean find(int keyToFind) {
+  public boolean find(int dataToFind) {
     Node prev = this.head;
+    BitSet keyToFind = intToBitSet(dataToFind, false);
     boolean[] markHolder = { false };
     while (true) {
       curr = prev.next.get(markHolder);
@@ -45,16 +101,16 @@ public class LockFreeList {
       }
       Node next = curr.next.get(markHolder);
       boolean currentMark = markHolder[0];
-      int currentKey = curr.key;
+      BitSet currentKey = curr.key;
       // Condition 2: The previous node is marked or is no longer the previous node
       if (prev.next.get(markHolder) != curr || markHolder[0] == true) {
         // Start over
-        find(keyToFind);
+        find(dataToFind);
       }
       // The current node is not marked (not deleted)
       if (!currentMark) {
-        if (currentKey >= keyToFind) {
-          return currentKey == keyToFind;
+        if (currentKey.equals(keyToFind) || greaterThan(keyToFind, currentKey)) {
+          return currentKey.equals(keyToFind);
         } else {
           prev = curr.next.get(markHolder);
         }
@@ -65,7 +121,7 @@ public class LockFreeList {
           deleteNode(curr);
         } else {
           // Deletion failed; try again
-          find(keyToFind);
+          find(dataToFind);
         }
       }
       prev = curr;
@@ -79,9 +135,9 @@ public class LockFreeList {
    * @return True if successfully inserted
    */
   public boolean insert(Node nodeToInsert) {
-    int key = nodeToInsert.key;
-    // If the key is already in the set, there is no insertion needed
-    if (find(key)) {
+    int data = nodeToInsert.data;
+    // If the data is already in the set, there is no insertion needed
+    if (find(data)) {
       return false;
     }
     // Set next reference for node
@@ -109,16 +165,16 @@ public class LockFreeList {
     if (insertAfter == null)
       return insert(nodeToInsert);
     Node prev = null;
-    while (insertAfter != null && nodeToInsert.key < insertAfter.key) {
+    while (insertAfter != null && lessThan(nodeToInsert.key, insertAfter.key)) {
       prev = insertAfter;
       insertAfter = insertAfter.next.getReference();
     }
     if (insertAfter == null) {
       insertAfter = prev;
     }
-    int key = nodeToInsert.key;
-    // If the key is already in the set, there is no insertion needed
-    if (find(key)) {
+    int data = nodeToInsert.data;
+    // If the data is already in the set, there is no insertion needed
+    if (find(data)) {
       return false;
     }
     Node nextInList = insertAfter.next.getReference();
@@ -144,11 +200,12 @@ public class LockFreeList {
    * @param keyToDelete The key of the node we are trying to delete
    * @return True if successful
    */
-  public boolean delete(int keyToDelete) {
+  public boolean delete(int dataToDelete) {
     Node prev = this.head;
     Node current;
     Node succ;
     boolean[] markHolder = { false };
+    BitSet keyToDelete = intToBitSet(dataToDelete, false);
     while (true) {
       // Perform the same traversal as find but stop once node to delete is found
       while (true) {
@@ -158,17 +215,17 @@ public class LockFreeList {
           return false;
         }
         boolean currentMark = markHolder[0];
-        int currentKey = current.key;
+        BitSet currentKey = current.key;
         // Condition 2: The previous node is marked or is no longer the previous node
         if (prev.next.get(markHolder) != current || markHolder[0] == true) {
           // Start over
-          delete(keyToDelete);
+          delete(dataToDelete);
         }
         // The current node is not marked (not deleted)
         if (!currentMark) {
-          if (currentKey == keyToDelete) {
+          if (currentKey.equals(keyToDelete)) {
             break;
-          } else if (currentKey > keyToDelete) {
+          } else if (greaterThan(currentKey, keyToDelete)) {
             return false;
           } else {
             prev = current.next.get(markHolder);
@@ -199,11 +256,12 @@ public class LockFreeList {
    * @param keyToDelete   The key of the node we are trying to delete
    * @return True if successful
    */
-  public boolean deleteAfter(Node startingPoint, int keyToDelete) {
+  public boolean deleteAfter(Node startingPoint, int dataToDelete) {
     Node prev = startingPoint;
     Node current;
     Node succ;
     boolean[] markHolder = { false };
+    BitSet keyToDelete = intToBitSet(dataToDelete, false);
     while (true) {
       // Perform the same traversal as find but stop once node to delete is found
       while (true) {
@@ -213,17 +271,17 @@ public class LockFreeList {
           return false;
         }
         boolean currentMark = markHolder[0];
-        int currentKey = current.key;
+        BitSet currentKey = current.key;
         // Condition 2: The previous node is marked or is no longer the previous node
         if (prev.next.get(markHolder) != current || markHolder[0] == true) {
           // Start over
-          delete(keyToDelete);
+          delete(dataToDelete);
         }
         // The current node is not marked (not deleted)
         if (!currentMark) {
-          if (currentKey == keyToDelete) {
+          if (currentKey.equals(keyToDelete)) {
             break;
-          } else if (currentKey > keyToDelete) {
+          } else if (greaterThan(currentKey, keyToDelete)) {
             return false;
           } else {
             prev = current.next.get(markHolder);
@@ -243,8 +301,10 @@ public class LockFreeList {
     }
   }
 
+  // TODO: when adding buckets, make sure to add a bucket/dummy node check so we
+  // dont delete a bucket
   private void deleteNode(Node node) {
-    node.key = 0;
+    node.data = 0;
     node.next = null;
   }
 

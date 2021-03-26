@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicMarkableReference;
 
 public class SplitOrderHashMap {
   final double MAX_LOAD = .9;
@@ -78,7 +79,7 @@ public class SplitOrderHashMap {
     // make this bits
     int bk_parent = _bitKey(parent);
 
-    Node dummy = new Node(bk_bucket, 1);
+    Node dummy = new Node(bk_bucket, new AtomicMarkableReference<Node>(null, false), true);
     // if insert doesn't fail, dummy node with parent key now in list.
     // node to insert / insert after
     if (!this.lockFreeList.insertAt(dummy, this.buckets.get(bk_parent))) {
@@ -101,8 +102,8 @@ public class SplitOrderHashMap {
     // parent = GET_PARENT(bucket)
   }
 
-  public int find(int key) {
-    int bucket = key % size();
+  public int find(int data) {
+    int bucket = data % size();
     Node bucket_loc = this.buckets.get(bucket);
     if (bucket_loc == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
@@ -110,23 +111,23 @@ public class SplitOrderHashMap {
     }
 
     // TODO: need a findAt() function
-    if (this.lockFreeList.find(key))
+    if (this.lockFreeList.find(data))
       return 1;
     else
       return 0;
 
   }
 
-  public int delete(int key) {
+  public int delete(int data) {
 
-    int bucket = key % size();
+    int bucket = data % size();
     Node bucket_loc = this.buckets.get(bucket);
     if (bucket_loc == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
       initialize_bucket(bucket);
     }
 
-    if (!this.lockFreeList.deleteAfter(this.buckets.get(bucket), key)) {
+    if (!this.lockFreeList.deleteAfter(this.buckets.get(bucket), data)) {
       return 0;
     }
 
@@ -136,11 +137,11 @@ public class SplitOrderHashMap {
 
   }
 
-  public int insert(int key) {
+  public int insert(int data) {
     // this key will be binary eventually
-    Node newNode = new Node(key); // next is null
+    Node newNode = new Node(data, new AtomicMarkableReference<Node>(null, false), false); // next is null
 
-    int bucket = key % size();
+    int bucket = data % size();
 
     if (this.buckets.get(bucket) == null) {
       initialize_bucket(bucket);
