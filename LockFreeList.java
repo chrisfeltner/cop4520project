@@ -13,7 +13,7 @@ public class LockFreeList {
   // this.curr = head;
   // }
   public LockFreeList() {
-    this.tail = new Node(1000, new AtomicMarkableReference<Node>(null, false), true);
+    this.tail = new Node(Integer.MAX_VALUE - 1, new AtomicMarkableReference<Node>(null, false), true);
     this.head = new Node(0, new AtomicMarkableReference<Node>(this.tail, false), true);
     this.curr = head;
   }
