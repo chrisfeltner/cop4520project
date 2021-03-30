@@ -3,38 +3,42 @@ import java.util.concurrent.atomic.AtomicMarkableReference;
 public class Node {
   public AtomicMarkableReference<Node> next;
   public int key;
+  public Integer data;
   public boolean dummy;
 
   // value nodes assigned true to MSB, when reversed becomes LSB
-  public Node(int key, AtomicMarkableReference<Node> next) {
-    this.key = key;
+  public Node(Integer data, AtomicMarkableReference<Node> next, boolean dummy) {
+    if (dummy) {
+      this.key = makeSentinelKey(data);
+    } else {
+      this.key = makeOrdinaryKey(data);
+    }
+    this.data = data;
     this.next = next;
     this.dummy = false;
   }
 
-  public Node(int key) {
-    this.key = key;
-    this.next = new AtomicMarkableReference<Node>(null, false);
-    this.dummy = false;
+  public static int makeOrdinaryKey(int x) {
+    Integer code = x & 0x00FFFFFF;
+    code = Integer.reverse(code);
+    code = code >>> 1;
+    code |= 1;
+    return code;
   }
 
-  public Node(int key, int dummy) {
-    this.key = key;
-    this.next = new AtomicMarkableReference<Node>(null, false);
-    // in the actual implementation....this would be by setting the reversed LSB to
-    // 1;
-    // we would have to parse the key to tell if its a dummy or not...
-    if (dummy == 1)
-      this.dummy = true;
+  public static int makeSentinelKey(int key) {
+    Integer code = key & 0x00FFFFFF;
+    code = Integer.reverse(code);
+    return code;
   }
 
   public String toString() {
     boolean mark = next.isMarked();
     String k;
     if (this.dummy)
-      k = "D_" + this.key;
+      k = "D_" + this.data;
     else
-      k = "" + this.key;
+      k = "" + this.data;
     return "(" + k + ", " + mark + ")";
   }
 }
