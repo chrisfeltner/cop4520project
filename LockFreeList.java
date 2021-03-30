@@ -137,6 +137,27 @@ public class LockFreeList {
     return (curr.key == key && !marked[0]);
   }
 
+  // public Node getSentinel(int index){
+  //   int key = makeSentinelKey(index);
+  //   boolean splice;
+  //   while (true) {
+  //     Window window = find(head, key);
+  //     Node pred = window.pred;
+  //     Node curr = window.curr;
+  //     if (curr.key == key) {
+  //       return new LockFreeList();
+  //     } else {
+  //       Node node = new Node(index, new AtomicMarkableReference<Node>(curr, false), false); // ?
+  //       node.next.set(pred.next.getReference(), false);
+  //       splice = pred.next.compareAndSet(curr, node, false, false);
+  //       if (splice)
+  //         return new LockFreeList();
+  //       else
+  //         continue;
+  //     }
+  //   }
+  // }
+
   /**
    * Printing method of the list. Helpful for testing.
    * 

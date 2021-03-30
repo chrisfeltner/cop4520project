@@ -2,34 +2,34 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SplitOrderHashMap {
-  final double MAX_LOAD = .9;
+  int threshHold = 10;
 
-  AtomicInteger itemCount;
-  AtomicInteger size;
   // underlying LockFreeList
   LockFreeList lockFreeList;
+  AtomicInteger itemCount;
+  AtomicInteger bucketSize;
 
   // dynamically sized buckets array
   ArrayList<Node> buckets;
 
-  /**
-   * Create a Split Ordered hash with initial Node.
-   *
-   * @param head      The head of an existing LockFreeList (Node)
-   * @param itemCount The number of items in an existing list
-   */
-  public SplitOrderHashMap(Node head, int itemCount) {
-    this.lockFreeList = new LockFreeList(head, itemCount);
-    this.itemCount = new AtomicInteger(0);
-    this.size = new AtomicInteger(2);
+  // /**
+  //  * Create a Split Ordered hash with initial Node.
+  //  *
+  //  * @param head      The head of an existing LockFreeList (Node)
+  //  * @param itemCount The number of items in an existing list
+  //  */
+  // public SplitOrderHashMap(Node head, int itemCount) {
+  //   this.lockFreeList = new LockFreeList(head, itemCount);
+  //   this.itemCount = new AtomicInteger(0);
+  //   this.size = new AtomicInteger(2);
 
-    // init buckets with Null (UNINITIALIZED)
-    this.buckets = new ArrayList<Node>(9);
-    for (int i = 0; i < this.size.intValue(); i++) {
-      this.buckets.add(null);
-    }
-    initialize_bucket(0);
-  }
+  //   // init buckets with Null (UNINITIALIZED)
+  //   this.buckets = new ArrayList<Node>(9);
+  //   for (int i = 0; i < this.size.intValue(); i++) {
+  //     this.buckets.add(null);
+  //   }
+  //   initialize_bucket(0);
+  // }
 
   /**
    * Create a Split Ordered hash from scratch.
@@ -37,149 +37,186 @@ public class SplitOrderHashMap {
   public SplitOrderHashMap() {
     this.lockFreeList = new LockFreeList();
     this.itemCount = new AtomicInteger(0);
-    this.size = new AtomicInteger(2);
+    this.bucketSize = new AtomicInteger(2);
+
     this.buckets = new ArrayList<Node>(4);
-    for (int i = 0; i < this.size.intValue(); i++) {
+    for (int i = 0; i < this.bucketSize.intValue(); i++) {
       this.buckets.add(null);
     }
     // initialize the 0th bucket to a reference to "0" key at beginning.
     // is it alright if this is 0
-    initialize_bucket(0);
+    initializeBucket(0);
   }
 
-  public int num_items() {
-    return this.itemCount.intValue();
+  public boolean add(int data) {
+    int myBucket = data % this.bucketSize.intValue();
+    Node b = getBucketList(myBucket);
+    if(!b.add(data))
+      return false;
+    int setSizeNow = itemCount.getAndIncrement();
+    int bucketSizeNow = bucketSize.intValue();
+    if (setSizeNow / bucketSizeNow > threshHold)
+      bucketSize.compareAndSet(bucketSizeNow,  2 * bucketSizeNow);
+    return true;
   }
 
-  public int size() {
-    return this.size.intValue();
+  private Node getBucketList(int myBucket) {
+    if (this.buckets.get(myBucket) == null)
+      initializeBucket(myBucket);
+    return this.buckets.get(myBucket);
   }
 
-  private int _getParent(int bucket_num) {
-    return bucket_num % size();
+  private void initializeBucket(int myBucket) {
+    int parent = getParent(myBucket);
+    if (this.buckets.get(parent) == null)
+      initializeBucket(parent);
+    Node b = this.buckets.get(parent).getSentinel(myBucket);
+    if (b != null)
+      this.buckets.set(myBucket,b);
   }
 
-  private int _bitKey(int number) {
-    return number;
+  private int getParent(int myBucket) {
+    int parent = bucketSize.get();
+    do {
+      parent = parent >> 1;
+    } while (parent > myBucket);
+    parent = myBucket - parent;
+    return parent;
   }
 
-  /**
-   * Used Internally by insert() and constructors.
-   */
-  private void initialize_bucket(int bucket) {
-    // this would be binary
-    int bk_bucket = _bitKey(bucket);
-    int parent;
-    if (bucket > size())
-      parent = _getParent(bk_bucket);
-    else
-      parent = bucket;
+  // public int num_items() {
+  //   return this.itemCount.intValue();
+  // }
 
-    // make this bits
-    int bk_parent = _bitKey(parent);
+  // public int size() {
+  //   return this.size.intValue();
+  // }
 
-    Node dummy = new Node(bk_bucket, 1);
-    // if insert doesn't fail, dummy node with parent key now in list.
-    // node to insert / insert after
-    if (!this.lockFreeList.insertAt(dummy, this.buckets.get(bk_parent))) {
-      // does this violate our linearizability??? if another thread calls find()
-      // delete dummy if insert failed. reset with curr from the find operation in
-      // insert call
-      dummy = this.lockFreeList.curr;
-      dummy.dummy = true;
-    }
+  // private int _getParent(int bucket_num) {
+  //   return bucket_num % size();
+  // }
 
-    // finally, init bucket with dummy node
-    this.buckets.set(bk_bucket, dummy);
+  // private int _bitKey(int number) {
+  //   return number;
+  // }
 
-    // pseudocode get parent macro that unsets buckets most sig, turned on bit. if
-    // exact
-    // dummy node already exists in list, maybe another process already tried to
-    // initialize same bucket
-    // in this case, fail and p
+  // /**
+  //  * Used Internally by insert() and constructors.
+  //  */
+  // private void initialize_bucket(int bucket) {
+  //   // this would be binary
+  //   int bk_bucket = _bitKey(bucket);
+  //   int parent;
+  //   if (bucket > size())
+  //     parent = _getParent(bk_bucket);
+  //   else
+  //     parent = bucket;
 
-    // parent = GET_PARENT(bucket)
-  }
+  //   // make this bits
+  //   int bk_parent = _bitKey(parent);
 
-  public int find(int key) {
-    int bucket = key % size();
-    Node bucket_loc = this.buckets.get(bucket);
-    if (bucket_loc == null) {
-      // recursively initialize parent bucket if it doesn't already exist. modulo
-      initialize_bucket(bucket);
-    }
+  //   Node dummy = new Node(bk_bucket, 1);
+  //   // if insert doesn't fail, dummy node with parent key now in list.
+  //   // node to insert / insert after
+  //   if (!this.lockFreeList.insertAt(dummy, this.buckets.get(bk_parent))) {
+  //     // does this violate our linearizability??? if another thread calls find()
+  //     // delete dummy if insert failed. reset with curr from the find operation in
+  //     // insert call
+  //     dummy = this.lockFreeList.curr;
+  //     dummy.dummy = true;
+  //   }
 
-    // TODO: need a findAt() function
-    if (this.lockFreeList.find(key))
-      return 1;
-    else
-      return 0;
+  //   // finally, init bucket with dummy node
+  //   this.buckets.set(bk_bucket, dummy);
 
-  }
+  //   // pseudocode get parent macro that unsets buckets most sig, turned on bit. if
+  //   // exact
+  //   // dummy node already exists in list, maybe another process already tried to
+  //   // initialize same bucket
+  //   // in this case, fail and p
 
-  public int delete(int key) {
+  //   // parent = GET_PARENT(bucket)
+  // }
 
-    int bucket = key % size();
-    Node bucket_loc = this.buckets.get(bucket);
-    if (bucket_loc == null) {
-      // recursively initialize parent bucket if it doesn't already exist. modulo
-      initialize_bucket(bucket);
-    }
+  // public int find(int key) {
+  //   int bucket = key % size();
+  //   Node bucket_loc = this.buckets.get(bucket);
+  //   if (bucket_loc == null) {
+  //     // recursively initialize parent bucket if it doesn't already exist. modulo
+  //     initialize_bucket(bucket);
+  //   }
 
-    if (!this.lockFreeList.deleteAfter(this.buckets.get(bucket), key)) {
-      return 0;
-    }
+  //   // TODO: need a findAt() function
+  //   if (this.lockFreeList.find(key))
+  //     return 1;
+  //   else
+  //     return 0;
 
-    this.itemCount.getAndDecrement();
+  // }
 
-    return 1;
+  // public int delete(int data) {
 
-  }
+  //   int bucket = data % size();
+  //   Node bucket_loc = this.buckets.get(bucket);
+  //   if (bucket_loc == null) {
+  //     // recursively initialize parent bucket if it doesn't already exist. modulo
+  //     initialize_bucket(bucket);
+  //   }
 
-  public int insert(int key) {
-    // this key will be binary eventually
-    Node newNode = new Node(key); // next is null
+  //   if (!this.lockFreeList.deleteAfter(this.buckets.get(bucket), data)) {
+  //     return 0;
+  //   }
 
-    int bucket = key % size();
+  //   this.itemCount.getAndDecrement();
 
-    if (this.buckets.get(bucket) == null) {
-      initialize_bucket(bucket);
-    }
+  //   return 1;
 
-    // fail to insertAt into the lockFreeList, return 0
-    if (!this.lockFreeList.insertAt(newNode, this.buckets.get(bucket))) {
-      // delete node
-      return 0;
-    }
+  // }
 
-    int csize = size();
-    if ((double) (this.itemCount.getAndIncrement() / csize) > MAX_LOAD) {
-      this.size.compareAndSet(csize, 2 * csize);
-      // double size of array list add nulls
-      // TODO: how does this resizing work with binary???
-      for (int i = 0; i < csize; i++) {
-        this.buckets.add(null);
-      }
-    }
-    return 1;
-  }
+  // public int insert(int data) {
+  //   // this data will be binary eventually
+  //   Node newNode = new Node(data); // next is null
 
-  /**
-   * Returns a string representation of the list.
-   */
-  public String toString() {
-    String s = "======================================================\nBUCKETS: \n";
-    int i = 0;
-    for (Node bucket : buckets) {
-      String b;
-      if (bucket == null) {
-        b = "null";
-      } else {
-        b = bucket.toString();
-      }
-      s = s.concat("bucket" + i + ": " + b + "\n");
-      i += 1;
-    }
-    return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
-  }
+  //   int bucket = data % size();
+
+  //   if (this.buckets.get(bucket) == null) {
+  //     initialize_bucket(bucket);
+  //   }
+
+  //   // fail to insertAt into the lockFreeList, return 0
+  //   if (!this.lockFreeList.insertAt(newNode, this.buckets.get(bucket))) {
+  //     // delete node
+  //     return 0;
+  //   }
+
+  //   int csize = size();
+  //   if ((double) (this.itemCount.getAndIncrement() / csize) > MAX_LOAD) {
+  //     this.size.compareAndSet(csize, 2 * csize);
+  //     // double size of array list add nulls
+  //     // TODO: how does this resizing work with binary???
+  //     for (int i = 0; i < csize; i++) {
+  //       this.buckets.add(null);
+  //     }
+  //   }
+  //   return 1;
+  // }
+
+  // /**
+  //  * Returns a string representation of the list.
+  //  */
+  // public String toString() {
+  //   String s = "======================================================\nBUCKETS: \n";
+  //   int i = 0;
+  //   for (Node bucket : buckets) {
+  //     String b;
+  //     if (bucket == null) {
+  //       b = "null";
+  //     } else {
+  //       b = bucket.toString();
+  //     }
+  //     s = s.concat("bucket" + i + ": " + b + "\n");
+  //     i += 1;
+  //   }
+  //   return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
+  // }
 }
