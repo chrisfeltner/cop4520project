@@ -2,14 +2,25 @@ import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.lang.Integer;
 
 public class LockFreeList {
-  Node head, tail, curr;
+  Node head;
+  Node tail;
+  Node curr;
 
+  /**
+   * Creates a new LockFreeList.
+   *
+   */
   public LockFreeList() {
     this.tail = new Node(Integer.MAX_VALUE - 1, new AtomicMarkableReference<Node>(null, false), true);
     this.head = new Node(0, new AtomicMarkableReference<Node>(this.tail, false), true);
     this.curr = head;
   }
 
+  /**
+   * Generates a Key for a non-bucket / sentinel node.
+   * 
+   * @param data The data of a node used to create the key.
+   */
   public static int makeOrdinaryKey(int data) {
     Integer code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
@@ -18,14 +29,27 @@ public class LockFreeList {
     return code;
   }
 
+  /**
+   * Generates a Key for a bucket / sentinel node.
+   * 
+   * @param data The data of a node used to create the key.
+   */
   public static int makeSentinelKey(int data) {
     Integer code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
     return code;
   }
 
+  /**
+   * Traverses the list for the position desired by the add and remove methods.
+   * 
+   * @param head the starting node of the list
+   * @param key  the key that is being searched for
+   */
   public Window find(Node head, int key) {
-    Node pred = null, curr = null, succ = null;
+    Node pred = null;
+    Node curr = null;
+    Node succ = null;
     boolean[] marked = { false };
     boolean snip;
     retry: while (true) {
@@ -50,6 +74,11 @@ public class LockFreeList {
     }
   }
 
+  /**
+   * Adds a node with the desired data to the list.
+   * 
+   * @param data The data of the node to be added.
+   */
   public boolean add(int data) {
     int key = makeOrdinaryKey(data);
     while (true) {
@@ -67,6 +96,11 @@ public class LockFreeList {
     }
   }
 
+  /**
+   * Removes a node with the desired data to the list.
+   * 
+   * @param data The data of the node to be removed.
+   */
   public boolean remove(int data) {
     int key = makeOrdinaryKey(data);
     boolean snip;
@@ -87,6 +121,11 @@ public class LockFreeList {
     }
   }
 
+  /**
+   * Determines whether a node with the data is in the list.
+   * 
+   * @param data The data of the node that is searched for.
+   */
   public boolean contains(int data) {
     boolean[] marked = { false };
     int key = makeOrdinaryKey(data);
@@ -98,6 +137,10 @@ public class LockFreeList {
     return (curr.key == key && !marked[0]);
   }
 
+  /**
+   * Printing method of the list. Helpful for testing.
+   * 
+   */
   public String toString() {
     Node current = this.head;
     String string = "";

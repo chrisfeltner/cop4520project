@@ -6,6 +6,14 @@ public class Node {
   public Integer data;
   public boolean dummy;
 
+  /**
+   * Constructor for the Node object.
+   * 
+   * @param data  The data of a node used to create the key.
+   * @param next  AtomicMarkableReference to the next node.
+   * @param dummy boolean indicating whether the node is a bucket/sentinel node or
+   *              not.
+   */
   // value nodes assigned true to MSB, when reversed becomes LSB
   public Node(Integer data, AtomicMarkableReference<Node> next, boolean dummy) {
     if (dummy) {
@@ -18,27 +26,42 @@ public class Node {
     this.dummy = false;
   }
 
-  public static int makeOrdinaryKey(int x) {
-    Integer code = x & 0x00FFFFFF;
+  /**
+   * Generates a Key for a non-bucket / sentinel node.
+   * 
+   * @param data The data of a node used to create the key.
+   */
+  public static int makeOrdinaryKey(int data) {
+    Integer code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
     code = code >>> 1;
     code |= 1;
     return code;
   }
 
-  public static int makeSentinelKey(int key) {
-    Integer code = key & 0x00FFFFFF;
+  /**
+   * Generates a Key for a bucket / sentinel node.
+   * 
+   * @param data The data of a node used to create the key.
+   */
+  public static int makeSentinelKey(int data) {
+    Integer code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
     return code;
   }
 
+  /**
+   * Printing method of each node. Helpful for testing.
+   * 
+   */
   public String toString() {
     boolean mark = next.isMarked();
     String k;
-    if (this.dummy)
+    if (this.dummy) {
       k = "D_" + this.data;
-    else
+    } else {
       k = "" + this.data;
+    }
     return "(" + k + ", " + mark + ")";
   }
 }
