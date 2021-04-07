@@ -47,7 +47,7 @@ public class SplitOrderHashMap {
     initialize_bucket(0);
   }
 
-    /**
+  /**
    * Generates a Key for a non-bucket / sentinel node.
    * 
    * @param data The data of a node used to create the key.
@@ -78,12 +78,8 @@ public class SplitOrderHashMap {
     return this.size.intValue();
   }
 
-  private int _getParent(int bucket_num) {
+  private int getParent(int bucket_num) {
     return bucket_num % size();
-  }
-
-  private int _bitKey(int number) {
-    return number;
   }
 
   /**
@@ -91,20 +87,21 @@ public class SplitOrderHashMap {
    */
   private void initialize_bucket(int bucket) {
     // this would be binary
-    int bk_bucket = _bitKey(bucket);
+    int bucketKey = makeSentinelKey(bucket);
     int parent;
-    if (bucket > size())
-      parent = _getParent(bk_bucket);
-    else
+    if (bucket > size()) {
+      parent = getParent(bucketKey);
+    } else {
       parent = bucket;
+    }
 
     // make this bits
-    int bk_parent = _bitKey(parent);
+    int parentKey = makeSentinelKey(parent);
 
-    Node dummy = new Node(bk_bucket, 1);
+    Node dummy = new Node(bucketKey, 1);
     // if insert doesn't fail, dummy node with parent key now in list.
     // node to insert / insert after
-    if (!this.lockFreeList.insertAt(dummy, this.buckets.get(bk_parent))) {
+    if (!this.lockFreeList.insertAt(dummy, this.buckets.get(parentKey))) {
       // does this violate our linearizability??? if another thread calls find()
       // delete dummy if insert failed. reset with curr from the find operation in
       // insert call
@@ -113,7 +110,7 @@ public class SplitOrderHashMap {
     }
 
     // finally, init bucket with dummy node
-    this.buckets.set(bk_bucket, dummy);
+    this.buckets.set(bucketKey, dummy);
 
     // pseudocode get parent macro that unsets buckets most sig, turned on bit. if
     // exact
@@ -126,8 +123,8 @@ public class SplitOrderHashMap {
 
   public int find(int key) {
     int bucket = key % size();
-    Node bucket_loc = this.buckets.get(bucket);
-    if (bucket_loc == null) {
+    Node bucketIndex = this.buckets.get(bucket);
+    if (bucketIndex == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
       initialize_bucket(bucket);
     }
@@ -143,8 +140,8 @@ public class SplitOrderHashMap {
   public int delete(int key) {
 
     int bucket = key % size();
-    Node bucket_loc = this.buckets.get(bucket);
-    if (bucket_loc == null) {
+    Node bucketIndex = this.buckets.get(bucket);
+    if (bucketIndex == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
       initialize_bucket(bucket);
     }
@@ -188,7 +185,7 @@ public class SplitOrderHashMap {
   }
 
   /**
-   * Returns a string representation of the list.
+   * Returns a string representation of the map.
    */
   public String toString() {
     String s = "======================================================\nBUCKETS: \n";
