@@ -3,7 +3,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SplitOrderHashMap {
   final double MAX_LOAD = .9;
-
+  final static int DIGIT_COUNT = 8;
   AtomicInteger itemCount;
   AtomicInteger size;
   // underlying LockFreeList
@@ -22,12 +22,13 @@ public class SplitOrderHashMap {
     this.buckets = new ArrayList<Node>(size.intValue());
     this.buckets.add(null);
     this.buckets.add(null);
-    Node head = new Node(0, 1);
+    Node head = new Node(makeSentinelKey(0), 0, 1);
     this.buckets.set(0, head);
     // num items in hash map
     this.itemCount = new AtomicInteger(0);
 
     this.lockFreeList = new LockFreeList(head);
+
 
   }
 
@@ -37,19 +38,28 @@ public class SplitOrderHashMap {
    * @param data The data of a node used to create the key.
    */
   public static int makeOrdinaryKey(int data) {
-    Integer code = data & 0x00FFFFFF;
+    Integer code;
+    if (DIGIT_COUNT == 8)
+      code = data & 0x0000000F;
+    else
+      code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
     code |= 1;
     return code;
   }
 
   /**
+   * FOR TOSTRING()
    * Generates a Key for a bucket / sentinel node.
    *
    * @param data The data of a node used to create the key.
    */
   public static int makeSentinelKey(int data) {
-    Integer code = data & 0x00FFFFFF;
+    Integer code;
+    if (DIGIT_COUNT == 8)
+      code = data & 0x0000000F;
+    else
+      code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
     return code;
   }
@@ -81,11 +91,11 @@ public class SplitOrderHashMap {
 
     // make this bits
     int parentKey = makeSentinelKey(parent);
-
-    Node dummy = new Node(bucketKey, 1);
+    System.out.println("PARENTKEY " + parentKey);
+    Node dummy = new Node(bucketKey, bucket, 1);
     // if insert doesn't fail, dummy node with parent key now in list.
     // node to insert / insert after
-    if (!this.lockFreeList.insertAt(dummy, this.buckets.get(parentKey))) {
+    if (!this.lockFreeList.insertAt(dummy, this.buckets.get(parent))) {
       // does this violate our linearizability??? if another thread calls find()
       // delete dummy if insert failed. reset with curr from the find operation in
       // insert call
@@ -94,7 +104,7 @@ public class SplitOrderHashMap {
     }
 
     // finally, init bucket with dummy node
-    this.buckets.set(bucketKey, dummy);
+    this.buckets.set(bucket, dummy);
 
     // pseudocode get parent macro that unsets buckets most sig, turned on bit. if
     // exact
@@ -114,7 +124,7 @@ public class SplitOrderHashMap {
     }
 
     // TODO: need a findAt() function
-    if (this.lockFreeList.find(key))
+    if (this.lockFreeList.findAfter(bucketIndex, key))
       return 1;
     else
       return 0;
@@ -142,7 +152,7 @@ public class SplitOrderHashMap {
 
   public int insert(int key) {
     // this key will be binary eventually
-    Node newNode = new Node(key); // next is null
+    Node newNode = new Node(makeOrdinaryKey(key), key, 0); // next is null
 
     int bucket = key % size();
 
