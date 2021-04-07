@@ -30,16 +30,27 @@ public class Runner {
     SplitOrderHashMap hashmap = new SplitOrderHashMap();
     System.out.println(hashmap);
     hashmap.insert(1);
+    System.out.println("Inserting One");
+
     System.out.println(hashmap);
     hashmap.insert(3);
     System.out.println(hashmap);
+
+    System.out.println("Inserting Three");
     hashmap.insert(4);
     System.out.println(hashmap);
+
     hashmap.insert(2);
+    System.out.println("Inserting 2");
+
     System.out.println(hashmap);
     hashmap.insert(20);
+    System.out.println("Inserting 20");
+
     System.out.println(hashmap);
     hashmap.insert(21);
+    System.out.println("Inserting 21");
+
     System.out.println(hashmap);
 
   }

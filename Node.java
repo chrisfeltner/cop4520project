@@ -28,6 +28,33 @@ public class Node {
       this.dummy = true;
   }
 
+  /**
+   * FOR TOSTRING()
+   * Generates a Key for a non-bucket / sentinel node.
+   *
+   * @param data The data of a node used to create the key.
+   */
+  public static int makeOrdinaryKey(int data) {
+    Integer code = data & 0x00FFFFFF;
+    code = Integer.reverse(code);
+    code |= 1;
+    return code;
+  }
+
+  /**
+   * FOR TOSTRING()
+   * Generates a Key for a bucket / sentinel node.
+   *
+   * @param data The data of a node used to create the key.
+   */
+  public static int makeSentinelKey(int data) {
+    Integer code = data & 0x00FFFFFF;
+    code = Integer.reverse(code);
+    return code;
+  }
+
+
+
   public String toString() {
     boolean mark = next.isMarked();
     String k;

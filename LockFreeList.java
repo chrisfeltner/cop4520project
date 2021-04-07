@@ -12,14 +12,9 @@ public class LockFreeList {
    * @param head      The head of an existing LockFreeList
    * @param itemCount The number of items in an existing list
    */
-  public LockFreeList(Node head, int itemCount) {
-    if (head == null) {
-      this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
-      this.itemCount = new AtomicInteger(0);
-    } else {
-      this.head = head;
-      this.itemCount = new AtomicInteger(itemCount);
-    }
+  public LockFreeList(Node head) {
+    this.head = head;
+    this.itemCount = new AtomicInteger(0);
     this.curr = head;
   }
 

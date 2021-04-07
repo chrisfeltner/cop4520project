@@ -15,41 +15,25 @@ public class SplitOrderHashMap {
   /**
    * Create a Split Ordered hash with initial Node.
    *
-   * @param head      The head of an existing LockFreeList (Node)
-   * @param itemCount The number of items in an existing list
-   */
-  public SplitOrderHashMap(Node head, int itemCount) {
-    this.lockFreeList = new LockFreeList(head, itemCount);
-    this.itemCount = new AtomicInteger(0);
-    this.size = new AtomicInteger(2);
-
-    // init buckets with Null (UNINITIALIZED)
-    this.buckets = new ArrayList<Node>(9);
-    for (int i = 0; i < this.size.intValue(); i++) {
-      this.buckets.add(null);
-    }
-    initialize_bucket(0);
-  }
-
-  /**
-   * Create a Split Ordered hash from scratch.
    */
   public SplitOrderHashMap() {
-    this.lockFreeList = new LockFreeList();
-    this.itemCount = new AtomicInteger(0);
+    // size of bucket list
     this.size = new AtomicInteger(2);
-    this.buckets = new ArrayList<Node>(9);
-    for (int i = 0; i < this.size.intValue(); i++) {
-      this.buckets.add(null);
-    }
-    // initialize the 0th bucket to a reference to "0" key at beginning.
-    // is it alright if this is 0
-    initialize_bucket(0);
+    this.buckets = new ArrayList<Node>(size.intValue());
+    this.buckets.add(null);
+    this.buckets.add(null);
+    Node head = new Node(0, 1);
+    this.buckets.set(0, head);
+    // num items in hash map
+    this.itemCount = new AtomicInteger(0);
+
+    this.lockFreeList = new LockFreeList(head);
+
   }
 
   /**
    * Generates a Key for a non-bucket / sentinel node.
-   * 
+   *
    * @param data The data of a node used to create the key.
    */
   public static int makeOrdinaryKey(int data) {
@@ -61,7 +45,7 @@ public class SplitOrderHashMap {
 
   /**
    * Generates a Key for a bucket / sentinel node.
-   * 
+   *
    * @param data The data of a node used to create the key.
    */
   public static int makeSentinelKey(int data) {
