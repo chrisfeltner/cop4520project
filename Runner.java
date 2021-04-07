@@ -8,8 +8,15 @@ public class Runner {
 public static void main(String[] args) {
     System.out.println("Testing LockFreeList \n");
     LockFreeList list = new LockFreeList();
-    for (int i = 0; i < 10; i++)
+    // for (int i = 0; i <= 10; i++)
+    // {
+    //   System.out.println(i);
+    //   list.add(i);
+    // }
+
+    for (int i = Integer.MAX_VALUE-1; i > Integer.MAX_VALUE - 10; i--)
     {
+      System.out.println(i);
       list.add(i);
     }
     System.out.println(list);

@@ -11,7 +11,7 @@ public class LockFreeList {
    *
    */
   public LockFreeList() {
-    this.tail = new Node(Integer.MAX_VALUE - 1, new AtomicMarkableReference<Node>(null, false), true);
+    this.tail = new Node(Integer.MAX_VALUE, new AtomicMarkableReference<Node>(null, false), true);
     this.head = new Node(0, new AtomicMarkableReference<Node>(this.tail, false), true);
     this.curr = head;
   }
@@ -22,10 +22,11 @@ public class LockFreeList {
    * @param data The data of a node used to create the key.
    */
   public static int makeOrdinaryKey(int data) {
+    // System.out.println("1. data \t" + data);
     Integer code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
-    code = code >>> 1;
     code |= 1;
+    // System.out.println(Integer.toUnsignedString​(code));
     return code;
   }
 
@@ -35,8 +36,10 @@ public class LockFreeList {
    * @param data The data of a node used to create the key.
    */
   public static int makeSentinelKey(int data) {
+    // System.out.println("2. data \t" + data);
     Integer code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
+    // System.out.println(Integer.toUnsignedString​(code));
     return code;
   }
 
@@ -65,7 +68,7 @@ public class LockFreeList {
           curr = succ;
           succ = curr.next.get(marked);
         }
-        if (curr.key >= key) {
+        if (Integer.compareUnsigned(curr.key,key) >= 0) {
           return new Window(pred, curr);
         }
         pred = curr;
@@ -84,7 +87,7 @@ public class LockFreeList {
     while (true) {
       Window window = find(head, key);
       Node pred = window.pred, curr = window.curr;
-      if (curr.key == key) {
+      if (Integer.compareUnsigned(curr.key,key) == 0) {
         return false;
       } else {
         Node node = new Node(data, new AtomicMarkableReference<Node>(curr, false), false);
@@ -107,7 +110,7 @@ public class LockFreeList {
     while (true) {
       Window window = find(head, key);
       Node pred = window.pred, curr = window.curr;
-      if (curr.key != key) {
+      if (Integer.compareUnsigned(curr.key,key) != 0) {
         return false;
       } else {
         Node succ = curr.next.getReference();
@@ -130,11 +133,11 @@ public class LockFreeList {
     boolean[] marked = { false };
     int key = makeOrdinaryKey(data);
     Node curr = head;
-    while (curr.key < key) {
+    while (Integer.compareUnsigned(curr.key,key) < 0) {
       curr = curr.next.getReference();
       Node succ = curr.next.get(marked);
     }
-    return (curr.key == key && !marked[0]);
+    return (Integer.compareUnsigned(curr.key,key) == 0 && !marked[0]);
   }
 
   // public Node getSentinel(int index){
@@ -166,7 +169,7 @@ public class LockFreeList {
     Node current = this.head;
     String string = "";
     while (current != null) {
-      string += current.toString() + " " + current.key + " " + " -> ";
+      string += current.toString() + " " + Integer.toUnsignedString​(current.key) + " " + " -> ";
       current = current.next.getReference();
     }
     string += "NULL";

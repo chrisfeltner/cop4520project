@@ -2,7 +2,7 @@ import java.util.concurrent.atomic.AtomicMarkableReference;
 
 public class Node {
   public AtomicMarkableReference<Node> next;
-  public int key;
+  public Integer key;
   public Integer data;
   public boolean dummy;
 
@@ -32,10 +32,11 @@ public class Node {
    * @param data The data of a node used to create the key.
    */
   public static int makeOrdinaryKey(int data) {
+    // System.out.println("3. data \t" + data);
     Integer code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
-    code = code >>> 1;
     code |= 1;
+    // System.out.println(Integer.toUnsignedString​(code));
     return code;
   }
 
@@ -45,8 +46,10 @@ public class Node {
    * @param data The data of a node used to create the key.
    */
   public static int makeSentinelKey(int data) {
+    // System.out.println("4. data \t" + data);
     Integer code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
+    // System.out.println(Integer.toUnsignedString​(code));
     return code;
   }
 
