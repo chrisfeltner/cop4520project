@@ -38,7 +38,7 @@ public class SplitOrderHashMap {
     this.lockFreeList = new LockFreeList();
     this.itemCount = new AtomicInteger(0);
     this.size = new AtomicInteger(2);
-    this.buckets = new ArrayList<Node>(9);
+    this.buckets = new ArrayList<Node>(2);
     for (int i = 0; i < this.size.intValue(); i++) {
       this.buckets.add(null);
     }

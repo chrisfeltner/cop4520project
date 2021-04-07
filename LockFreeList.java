@@ -13,18 +13,13 @@ public class LockFreeList {
    * @param itemCount The number of items in an existing list
    */
   public LockFreeList(Node head, int itemCount) {
-    if (head == null) {
-      this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
-      this.itemCount = new AtomicInteger(0);
-    } else {
-      this.head = head;
-      this.itemCount = new AtomicInteger(itemCount);
-    }
+    this.head = head;
+    this.itemCount = new AtomicInteger(itemCount);
     this.curr = head;
   }
 
   public LockFreeList() {
-    this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
+    this.head = null;
     this.itemCount = new AtomicInteger(0);
     this.curr = head;
   }
@@ -124,6 +119,11 @@ public class LockFreeList {
    * @return True if successfully inserted
    */
   public boolean insert(Node nodeToInsert) {
+    if (this.head == null) {
+      this.head = nodeToInsert;
+      this.curr = this.head;
+      return true;
+    }
     int key = nodeToInsert.key;
     // If the key is already in the set, there is no insertion needed
     if (find(key)) {
@@ -151,6 +151,11 @@ public class LockFreeList {
    * @return True if successful
    */
   public boolean insertAt(Node nodeToInsert, Node insertAfter) {
+    if (this.head == null) {
+      this.head = nodeToInsert;
+      this.curr = this.head;
+      return true;
+    }
     if (insertAfter == null)
       return insert(nodeToInsert);
     Node prev = null;
