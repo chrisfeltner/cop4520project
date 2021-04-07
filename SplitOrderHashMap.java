@@ -47,6 +47,29 @@ public class SplitOrderHashMap {
     initialize_bucket(0);
   }
 
+    /**
+   * Generates a Key for a non-bucket / sentinel node.
+   * 
+   * @param data The data of a node used to create the key.
+   */
+  public static int makeOrdinaryKey(int data) {
+    Integer code = data & 0x00FFFFFF;
+    code = Integer.reverse(code);
+    code |= 1;
+    return code;
+  }
+
+  /**
+   * Generates a Key for a bucket / sentinel node.
+   * 
+   * @param data The data of a node used to create the key.
+   */
+  public static int makeSentinelKey(int data) {
+    Integer code = data & 0x00FFFFFF;
+    code = Integer.reverse(code);
+    return code;
+  }
+
   public int num_items() {
     return this.itemCount.intValue();
   }
