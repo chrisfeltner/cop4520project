@@ -29,27 +29,65 @@ public class Runner {
     System.out.println("Testing SplitOrderedHashMap");
     SplitOrderHashMap hashmap = new SplitOrderHashMap();
     System.out.println(hashmap);
+    System.out.println("Inserting 1");
+    System.out.println();
+
+
     hashmap.insert(1);
-    System.out.println("Inserting One");
+    System.out.println();
 
     System.out.println(hashmap);
+    System.out.println("Inserting 3");
+    System.out.println();
+
     hashmap.insert(3);
-    System.out.println(hashmap);
+    System.out.println();
 
-    System.out.println("Inserting Three");
-    hashmap.insert(4);
     System.out.println(hashmap);
+    System.out.println("Inserting 4");
+    System.out.println();
+
+    hashmap.insert(4);
+    System.out.println();
+
+    System.out.println(hashmap);
+    System.out.println("Inserting 2");
+    System.out.println();
 
     hashmap.insert(2);
-    System.out.println("Inserting 2");
+    System.out.println();
+
 
     System.out.println(hashmap);
-    hashmap.insert(20);
     System.out.println("Inserting 20");
+    System.out.println();
+
+    hashmap.insert(20);
+    System.out.println();
 
     System.out.println(hashmap);
-    hashmap.insert(21);
     System.out.println("Inserting 21");
+    System.out.println();
+
+    hashmap.insert(21);
+    System.out.println();
+
+    // this should fail because three is already in the hashmap
+    System.out.println(hashmap);
+    System.out.println("Inserting 3");
+    System.out.println();
+
+    System.out.println(hashmap);
+
+    System.out.println("Inserting 22");
+
+    hashmap.insert(22);
+
+    System.out.println(hashmap);
+
+    System.out.println("Inserting 19");
+
+    hashmap.insert(19);
 
     System.out.println(hashmap);
 

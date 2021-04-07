@@ -14,13 +14,13 @@ public class LockFreeList {
    */
   public LockFreeList(Node head) {
     this.head = head;
-    this.itemCount = new AtomicInteger(0);
+    this.itemCount = new AtomicInteger(1);
     this.curr = head;
   }
 
   public LockFreeList() {
-    this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
-    this.itemCount = new AtomicInteger(0);
+    this.head = new Node(0, 0, 1);
+    this.itemCount = new AtomicInteger(1);
     this.curr = head;
   }
 
@@ -31,41 +31,7 @@ public class LockFreeList {
    * @return true if key is in list
    */
   public boolean find(int keyToFind) {
-    Node prev = this.head;
-    boolean[] markHolder = { false };
-    while (true) {
-      curr = prev.next.get(markHolder);
-      // Condition 1: We reach the end of the list without finding key
-      if (curr == null) {
-        return false;
-      }
-      Node next = curr.next.get(markHolder);
-      boolean currentMark = markHolder[0];
-      int currentKey = curr.key;
-      // Condition 2: The previous node is marked or is no longer the previous node
-      if (prev.next.get(markHolder) != curr || markHolder[0] == true) {
-        // Start over
-        find(keyToFind);
-      }
-      // The current node is not marked (not deleted)
-      if (!currentMark) {
-        if (currentKey >= keyToFind) {
-          return currentKey == keyToFind;
-        } else {
-          prev = curr.next.get(markHolder);
-        }
-      } else {
-        // The current node has been marked for deletion!
-        if (prev.next.compareAndSet(curr, next, false, false)) {
-          // Node will be garbage collected by Java runtime
-          deleteNode(curr);
-        } else {
-          // Deletion failed; try again
-          find(keyToFind);
-        }
-      }
-      prev = curr;
-    }
+    return findAfter(this.head, keyToFind);
   }
 
   /**
@@ -93,8 +59,10 @@ public class LockFreeList {
       }
       // The current node is not marked (not deleted)
       if (!currentMark) {
-        if (currentKey >= keyToFind) {
-          return currentKey == keyToFind;
+        if (Integer.compareUnsigned(currentKey, keyToFind) >= 0) {
+          System.out.println("CURR KEY " + currentKey);
+          System.out.println("KEYTOFIND " + keyToFind);
+          return Integer.compareUnsigned(currentKey,keyToFind) == 0;
         } else {
           prev = curr.next.get(markHolder);
         }
@@ -119,23 +87,7 @@ public class LockFreeList {
    * @return True if successfully inserted
    */
   public boolean insert(Node nodeToInsert) {
-    int key = nodeToInsert.key;
-    // If the key is already in the set, there is no insertion needed
-    if (find(key)) {
-      return false;
-    }
-    // Set next reference for node
-    Node nextInList = this.head.next.getReference();
-    nodeToInsert.next = new AtomicMarkableReference<>(nextInList, false);
-    if (head.next.compareAndSet(nextInList, nodeToInsert, false, false)) {
-      // The head's next reference still points to nodeToInsert and head has not
-      // been marked for deletion. If the CAS operation returns true, head's next
-      // reference points to the inserted node
-      return true;
-    } else {
-      // Try again; We can assume that it is illegal to delete head
-      return insert(nodeToInsert);
-    }
+    return insertAt(nodeToInsert, this.head);
   }
 
   /**
@@ -147,16 +99,28 @@ public class LockFreeList {
    */
   public boolean insertAt(Node nodeToInsert, Node insertAfter) {
     if (insertAfter == null)
-      return insert(nodeToInsert);
-    Node prev = null;
-    while (insertAfter != null && nodeToInsert.key < insertAfter.key) {
+      insertAfter = this.head;
+
+    Node prev = insertAfter;
+    System.out.println("insert" + nodeToInsert.readableKey + "After" + " " + insertAfter);
+    System.out.println(Integer.compareUnsigned(nodeToInsert.key, insertAfter.key));
+
+
+
+    while (insertAfter != null && Integer.compareUnsigned(nodeToInsert.key, insertAfter.key) < 0) {
       prev = insertAfter;
       insertAfter = insertAfter.next.getReference();
+      //System.out.println("going" + insertAfter);
     }
+    //System.out.println("insert" + nodeToInsert.readableKey + "After" + " " + insertAfter);
     if (insertAfter == null) {
       insertAfter = prev;
     }
+
+    //System.out.println("insert" + nodeToInsert.readableKey + "After" + " " + insertAfter);
+
     int key = nodeToInsert.key;
+    //System.out.println("INSERT AFTER " + insertAfter.readableKey);
     // If the key is already in the set, there is no insertion needed
     if (findAfter(insertAfter, key)) {
       return false;
@@ -185,49 +149,7 @@ public class LockFreeList {
    * @return True if successful
    */
   public boolean delete(int keyToDelete) {
-    Node prev = this.head;
-    Node current;
-    Node succ;
-    boolean[] markHolder = { false };
-    while (true) {
-      // Perform the same traversal as find but stop once node to delete is found
-      while (true) {
-        current = prev.next.get(markHolder);
-        // Condition 1: We reach the end of the list without finding key
-        if (current == null) {
-          return false;
-        }
-        boolean currentMark = markHolder[0];
-        int currentKey = current.key;
-        // Condition 2: The previous node is marked or is no longer the previous node
-        if (prev.next.get(markHolder) != current || markHolder[0] == true) {
-          // Start over
-          delete(keyToDelete);
-        }
-        // The current node is not marked (not deleted)
-        if (!currentMark) {
-          if (currentKey == keyToDelete) {
-            break;
-          } else if (currentKey > keyToDelete) {
-            return false;
-          } else {
-            prev = current.next.get(markHolder);
-          }
-        }
-        prev = current;
-      }
-
-      succ = current.next.getReference();
-      // Try to perform logical deletion, if we can't then try again
-      if (!current.next.compareAndSet(succ, succ, false, true)) {
-        continue;
-      }
-      // Try to perform physical deletion, if we can't then find will
-      if (prev.next.compareAndSet(current, succ, false, false)) {
-        deleteNode(current);
-      }
-      return true;
-    }
+    return deleteAfter(this.head, keyToDelete);
   }
 
   /**
@@ -261,7 +183,7 @@ public class LockFreeList {
         }
         // The current node is not marked (not deleted)
         if (!currentMark) {
-          if (currentKey == keyToDelete) {
+          if (Integer.compareUnsigned(currentKey,keyToDelete) == 0) {
             break;
           } else if (currentKey > keyToDelete) {
             return false;

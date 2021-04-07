@@ -3,6 +3,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SplitOrderHashMap {
   final double MAX_LOAD = .9;
+  final static int THRESHHOLD = 10;
   final static int DIGIT_COUNT = 8;
   AtomicInteger itemCount;
   AtomicInteger size;
@@ -72,9 +73,16 @@ public class SplitOrderHashMap {
     return this.size.intValue();
   }
 
-  private int getParent(int bucket_num) {
-    return bucket_num % size();
+  private int getParent(int myBucket) {
+    int parent = size();
+    do {
+      parent = parent >> 1;
+    } while (parent > myBucket);
+    parent = myBucket - parent;
+    return parent;
   }
+
+
 
   /**
    * Used Internally by insert() and constructors.
@@ -82,19 +90,15 @@ public class SplitOrderHashMap {
   private void initialize_bucket(int bucket) {
     // this would be binary
     int bucketKey = makeSentinelKey(bucket);
-    int parent;
-    if (bucket > size()) {
-      parent = getParent(bucketKey);
-    } else {
-      parent = bucket;
-    }
+    int parent = getParent(bucket);
 
     // make this bits
     int parentKey = makeSentinelKey(parent);
-    System.out.println("PARENTKEY " + parentKey);
+
     Node dummy = new Node(bucketKey, bucket, 1);
     // if insert doesn't fail, dummy node with parent key now in list.
     // node to insert / insert after
+    //System.out.println("INIT BUCKET " + this.buckets.get(parent));
     if (!this.lockFreeList.insertAt(dummy, this.buckets.get(parent))) {
       // does this violate our linearizability??? if another thread calls find()
       // delete dummy if insert failed. reset with curr from the find operation in
@@ -162,6 +166,7 @@ public class SplitOrderHashMap {
 
     // fail to insertAt into the lockFreeList, return 0
     if (!this.lockFreeList.insertAt(newNode, this.buckets.get(bucket))) {
+      System.out.println("Could NOT insert " + key);
       // delete node
       return 0;
     }

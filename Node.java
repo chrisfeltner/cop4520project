@@ -5,7 +5,7 @@ public class Node {
   public AtomicMarkableReference<Node> next;
   public int key;
   public boolean dummy;
-  public int readable_key;
+  public int readableKey;
   final static int DIGIT_COUNT = 8;
 
 
@@ -15,7 +15,7 @@ public class Node {
     this.key = key;
     this.next = next;
     this.dummy = false;
-    this.readable_key = key;
+    this.readableKey = key;
   }
 
   public Node(int key) {
@@ -32,13 +32,13 @@ public class Node {
     // we would have to parse the key to tell if its a dummy or not...
     if (dummy == 1)
       this.dummy = true;
-    this.readable_key = key;
+    this.readableKey = key;
 
   }
 
-  public Node(int key, int readable_key, int dummy) {
+  public Node(int key, int readableKey, int dummy) {
     this.key = key;
-    this.readable_key = readable_key;
+    this.readableKey = readableKey;
     this.next = new AtomicMarkableReference<Node>(null, false);
     // in the actual implementation....this would be by setting the reversed LSB to
     // 1;
@@ -59,8 +59,8 @@ public class Node {
     boolean mark = next.isMarked();
     String k;
     int keyPrint;
-    if (this.readable_key != this.key)
-      keyPrint = this.readable_key;
+    if (this.readableKey != this.key)
+      keyPrint = this.readableKey;
     else
       keyPrint = this.key;
 
@@ -68,7 +68,7 @@ public class Node {
     if (this.dummy)
       k = "D_" + keyPrint;
     else
-      k = "" + keyPrint;
+      k = "N_" + keyPrint;
     return "(" + binaryString + k + ", " + mark + ")";
   }
 }
