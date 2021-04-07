@@ -5,6 +5,7 @@ public class LockFreeList {
   Node head;
   AtomicInteger itemCount;
   Node curr;
+
   /**
    * Create a new LockFreeList using the head of an existing LockFreeList.
    *
@@ -73,6 +74,50 @@ public class LockFreeList {
   }
 
   /**
+   * Check if a key is in the list.
+   *
+   * @param keyToFind The value to find in the list
+   * @return true if key is in list
+   */
+  public boolean findAfter(Node head, int keyToFind) {
+    Node prev = head;
+    boolean[] markHolder = { false };
+    while (true) {
+      curr = prev.next.get(markHolder);
+      // Condition 1: We reach the end of the list without finding key
+      if (curr == null) {
+        return false;
+      }
+      Node next = curr.next.get(markHolder);
+      boolean currentMark = markHolder[0];
+      int currentKey = curr.key;
+      // Condition 2: The previous node is marked or is no longer the previous node
+      if (prev.next.get(markHolder) != curr || markHolder[0] == true) {
+        // Start over
+        findAfter(head, keyToFind);
+      }
+      // The current node is not marked (not deleted)
+      if (!currentMark) {
+        if (currentKey >= keyToFind) {
+          return currentKey == keyToFind;
+        } else {
+          prev = curr.next.get(markHolder);
+        }
+      } else {
+        // The current node has been marked for deletion!
+        if (prev.next.compareAndSet(curr, next, false, false)) {
+          // Node will be garbage collected by Java runtime
+          deleteNode(curr);
+        } else {
+          // Deletion failed; try again
+          findAfter(head, keyToFind);
+        }
+      }
+      prev = curr;
+    }
+  }
+
+  /**
    * Insert a node after the head of the list.
    *
    * @param nodeToInsert A new node with key set, but next reference null
@@ -118,7 +163,7 @@ public class LockFreeList {
     }
     int key = nodeToInsert.key;
     // If the key is already in the set, there is no insertion needed
-    if (find(key)) {
+    if (findAfter(insertAfter, key)) {
       return false;
     }
     Node nextInList = insertAfter.next.getReference();
