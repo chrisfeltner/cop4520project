@@ -3,17 +3,16 @@ import java.lang.Integer;
 
 public class LockFreeList {
   Node head;
-  Node tail;
-  Node curr;
+  // Node tail;
 
   /**
    * Creates a new LockFreeList.
    *
    */
   public LockFreeList() {
-    this.tail = new Node(Integer.MAX_VALUE, new AtomicMarkableReference<Node>(null, false), true);
-    this.head = new Node(0, new AtomicMarkableReference<Node>(this.tail, false), true);
-    this.curr = head;
+    // this.tail = new Node(Integer.MAX_VALUE, new
+    // AtomicMarkableReference<Node>(null, false), true);
+    this.head = new Node(0, new AtomicMarkableReference<Node>(null, false), true);
   }
 
   /**
@@ -59,6 +58,9 @@ public class LockFreeList {
       pred = head;
       curr = pred.next.getReference();
       while (true) {
+        if (curr == null) {
+          return new Window(pred, curr);
+        }
         succ = curr.next.get(marked);
         while (marked[0]) {
           snip = pred.next.compareAndSet(curr, succ, false, false);
@@ -68,7 +70,7 @@ public class LockFreeList {
           curr = succ;
           succ = curr.next.get(marked);
         }
-        if (Integer.compareUnsigned(curr.key,key) >= 0) {
+        if (Integer.compareUnsigned(curr.key, key) >= 0) {
           return new Window(pred, curr);
         }
         pred = curr;
@@ -87,7 +89,7 @@ public class LockFreeList {
     while (true) {
       Window window = find(head, key);
       Node pred = window.pred, curr = window.curr;
-      if (Integer.compareUnsigned(curr.key,key) == 0) {
+      if (curr != null && Integer.compareUnsigned(curr.key, key) == 0) {
         return false;
       } else {
         Node node = new Node(data, new AtomicMarkableReference<Node>(curr, false), false);
@@ -110,7 +112,8 @@ public class LockFreeList {
     while (true) {
       Window window = find(head, key);
       Node pred = window.pred, curr = window.curr;
-      if (Integer.compareUnsigned(curr.key,key) != 0) {
+      System.out.println("LOOK AT ME :D: \t" + pred + " " + curr);
+      if (Integer.compareUnsigned(curr.key, key) != 0) {
         return false;
       } else {
         Node succ = curr.next.getReference();
@@ -133,32 +136,33 @@ public class LockFreeList {
     boolean[] marked = { false };
     int key = makeOrdinaryKey(data);
     Node curr = head;
-    while (Integer.compareUnsigned(curr.key,key) < 0) {
+    while (Integer.compareUnsigned(curr.key, key) < 0) {
       curr = curr.next.getReference();
       Node succ = curr.next.get(marked);
     }
-    return (Integer.compareUnsigned(curr.key,key) == 0 && !marked[0]);
+    return (Integer.compareUnsigned(curr.key, key) == 0 && !marked[0]);
   }
 
   // public Node getSentinel(int index){
-  //   int key = makeSentinelKey(index);
-  //   boolean splice;
-  //   while (true) {
-  //     Window window = find(head, key);
-  //     Node pred = window.pred;
-  //     Node curr = window.curr;
-  //     if (curr.key == key) {
-  //       return new LockFreeList();
-  //     } else {
-  //       Node node = new Node(index, new AtomicMarkableReference<Node>(curr, false), false); // ?
-  //       node.next.set(pred.next.getReference(), false);
-  //       splice = pred.next.compareAndSet(curr, node, false, false);
-  //       if (splice)
-  //         return new LockFreeList();
-  //       else
-  //         continue;
-  //     }
-  //   }
+  // int key = makeSentinelKey(index);
+  // boolean splice;
+  // while (true) {
+  // Window window = find(head, key);
+  // Node pred = window.pred;
+  // Node curr = window.curr;
+  // if (curr.key == key) {
+  // return new LockFreeList();
+  // } else {
+  // Node node = new Node(index, new AtomicMarkableReference<Node>(curr, false),
+  // false); // ?
+  // node.next.set(pred.next.getReference(), false);
+  // splice = pred.next.compareAndSet(curr, node, false, false);
+  // if (splice)
+  // return new LockFreeList();
+  // else
+  // continue;
+  // }
+  // }
   // }
 
   /**

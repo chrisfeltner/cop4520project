@@ -5,20 +5,30 @@ public class Runner {
    *
    * @param args Ignored
    */
-public static void main(String[] args) {
+  public static void main(String[] args) {
     System.out.println("Testing LockFreeList \n");
     LockFreeList list = new LockFreeList();
     // for (int i = 0; i <= 10; i++)
     // {
-    //   System.out.println(i);
-    //   list.add(i);
+    // System.out.println(i);
+    // list.add(i);
     // }
 
-    for (int i = Integer.MAX_VALUE-1; i > Integer.MAX_VALUE - 10; i--)
-    {
+    for (int i = 0; i < 5; i++) {
       System.out.println(i);
       list.add(i);
     }
+    list.remove(3);
+    list.remove(1);
+    list.remove(0);
+    list.remove(4);
+    list.remove(2);
+
+    for (int i = 0; i < 5; i++) {
+      System.out.println(i);
+      list.add(i);
+    }
+
     System.out.println(list);
     // var testsPassed = 0;
     // var testsFailed = 0;
@@ -37,16 +47,18 @@ public static void main(String[] args) {
     // System.out.println("Output:");
     // System.out.println(testRun + '\n');
     // System.out.println("Expected:");
-    // var testCase1 = "(0, false) 0  -> (8, false) 134217729  -> (10, false) 671088641  -> "
-    //     + "(9, false) 1207959553  -> (13, false) 1476395009  -> (7, false) 1879048193  -> "
-    //     + "(2147483646, false) 2147483392  -> NULL";
+    // var testCase1 = "(0, false) 0 -> (8, false) 134217729 -> (10, false)
+    // 671088641 -> "
+    // + "(9, false) 1207959553 -> (13, false) 1476395009 -> (7, false) 1879048193
+    // -> "
+    // + "(2147483646, false) 2147483392 -> NULL";
     // System.out.println(testCase1);
     // if (testRun.equals(testCase1)) {
-    //   System.out.println("\nTEST PASSED! \n");
-    //   testsPassed++;
+    // System.out.println("\nTEST PASSED! \n");
+    // testsPassed++;
     // } else {
-    //   System.out.println("\nTEST FAILED! \n");
-    //   testsFailed++;
+    // System.out.println("\nTEST FAILED! \n");
+    // testsFailed++;
     // }
 
     // System.out.println("-----------------------------------------------------------");
@@ -69,15 +81,16 @@ public static void main(String[] args) {
     // System.out.println("Output:");
     // System.out.println(testRun2 + '\n');
     // System.out.println("Expected:");
-    // var testCase2 = "(0, false) 0  -> (10, false) 671088641  -> (7, false) 1879048193  -> "
-    //     + "(2147483646, false) 2147483392  -> NULL";
+    // var testCase2 = "(0, false) 0 -> (10, false) 671088641 -> (7, false)
+    // 1879048193 -> "
+    // + "(2147483646, false) 2147483392 -> NULL";
     // System.out.println(testCase2);
     // if (testRun2.equals(testCase2)) {
-    //   System.out.println("\nTEST PASSED! \n");
-    //   testsPassed++;
+    // System.out.println("\nTEST PASSED! \n");
+    // testsPassed++;
     // } else {
-    //   System.out.println("\nTEST FAILED! \n");
-    //   testsFailed++;
+    // System.out.println("\nTEST FAILED! \n");
+    // testsFailed++;
     // }
 
     // System.out.println("-----------------------------------------------------------");
@@ -100,17 +113,20 @@ public static void main(String[] args) {
     // System.out.println("Output:");
     // System.out.println(testRun3 + '\n');
     // System.out.println("Expected:");
-    // var testCase3 = "(0, false) 0  -> (8, false) 134217729  -> (4, false) 268435457  -> " + "(2, false) 536870913  "
-    //     + "-> (10, false) 671088641  -> (6, false) 805306369  -> (1, false) 1073741825  -> " + "(9, false) 1207959553  "
-    //     + "-> (5, false) 1342177281  -> (3, false) 1610612737  -> (7, false) 1879048193  -> " + "(2147483646, false)"
-    //     + " 2147483392  -> NULL";
+    // var testCase3 = "(0, false) 0 -> (8, false) 134217729 -> (4, false) 268435457
+    // -> " + "(2, false) 536870913 "
+    // + "-> (10, false) 671088641 -> (6, false) 805306369 -> (1, false) 1073741825
+    // -> " + "(9, false) 1207959553 "
+    // + "-> (5, false) 1342177281 -> (3, false) 1610612737 -> (7, false) 1879048193
+    // -> " + "(2147483646, false)"
+    // + " 2147483392 -> NULL";
     // System.out.println(testCase3);
     // if (testRun3.equals(testCase3)) {
-    //   System.out.println("\nTEST PASSED! \n");
-    //   testsPassed++;
+    // System.out.println("\nTEST PASSED! \n");
+    // testsPassed++;
     // } else {
-    //   System.out.println("\nTEST FAILED! \n");
-    //   testsFailed++;
+    // System.out.println("\nTEST FAILED! \n");
+    // testsFailed++;
     // }
 
     // System.out.println("-----------------------------------------------------------");
@@ -142,19 +158,22 @@ public static void main(String[] args) {
     // System.out.println("Output:");
     // System.out.println(testRun4 + '\n');
     // System.out.println("Expected:");
-    // var testCase4 = "(0, false) 0  -> (4, false) 268435457" + "  "
-    //     + "-> (6, false) 805306369  -> (1, false) 1073741825  -> " + "(9, false) 1207959553  "
-    //     + "-> (5, false) 1342177281  -> " + "(2147483646, false)" + " 2147483392  -> NULL";
+    // var testCase4 = "(0, false) 0 -> (4, false) 268435457" + " "
+    // + "-> (6, false) 805306369 -> (1, false) 1073741825 -> " + "(9, false)
+    // 1207959553 "
+    // + "-> (5, false) 1342177281 -> " + "(2147483646, false)" + " 2147483392 ->
+    // NULL";
     // System.out.println(testCase4);
     // if (testRun4.equals(testCase4)) {
-    //   System.out.println("\nTEST PASSED! \n");
-    //   testsPassed++;
+    // System.out.println("\nTEST PASSED! \n");
+    // testsPassed++;
     // } else {
-    //   System.out.println("\nTEST FAILED! \n");
-    //   testsFailed++;
+    // System.out.println("\nTEST FAILED! \n");
+    // testsFailed++;
     // }
 
-    // System.out.println("PASSED " + testsPassed + "/" + (testsFailed + testsPassed) + " TESTS.");
+    // System.out.println("PASSED " + testsPassed + "/" + (testsFailed +
+    // testsPassed) + " TESTS.");
     // System.out.println("Testing SplitOrderedHashMap");
     // SplitOrderHashMap hashmap = new SplitOrderHashMap();
     // System.out.println(hashmap);
