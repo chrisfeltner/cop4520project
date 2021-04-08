@@ -60,8 +60,8 @@ public class LockFreeList {
       // The current node is not marked (not deleted)
       if (!currentMark) {
         if (Integer.compareUnsigned(currentKey, keyToFind) >= 0) {
-          System.out.println("CURR KEY " + currentKey);
-          System.out.println("KEYTOFIND " + keyToFind);
+          // System.out.println("CURR KEY " + Integer.toUnsignedString(currentKey));
+          // System.out.println("KEYTOFIND " + Integer.toUnsignedString(keyToFind));
           return Integer.compareUnsigned(currentKey,keyToFind) == 0;
         } else {
           prev = curr.next.get(markHolder);
@@ -102,21 +102,24 @@ public class LockFreeList {
       insertAfter = this.head;
 
     Node prev = insertAfter;
-    System.out.println("insert" + nodeToInsert.readableKey + "After" + " " + insertAfter);
-    System.out.println(Integer.compareUnsigned(nodeToInsert.key, insertAfter.key));
+    // System.out.println("insert " + nodeToInsert.readableKey + " After" + " " + insertAfter);
+    // System.out.println(Integer.compareUnsigned(nodeToInsert.key, insertAfter.key));
 
 
-
-    while (insertAfter != null && Integer.compareUnsigned(nodeToInsert.key, insertAfter.key) < 0) {
+    
+    while (insertAfter != null && Integer.compareUnsigned(nodeToInsert.key, insertAfter.key) > 0) {
+      // System.out.println("nodetoinsert = " + Integer.toUnsignedString(nodeToInsert.key));
+      // System.out.println("insertAfter = " + Integer.toUnsignedString(insertAfter.key));
       prev = insertAfter;
       insertAfter = insertAfter.next.getReference();
       //System.out.println("going" + insertAfter);
     }
     //System.out.println("insert" + nodeToInsert.readableKey + "After" + " " + insertAfter);
-    if (insertAfter == null) {
-      insertAfter = prev;
-    }
-
+    // if (insertAfter == null) {
+    //   System.out.println("HELLO WE'RE COMING FROM HERE");
+    //   insertAfter = prev;
+    // }
+    insertAfter = prev;
     //System.out.println("insert" + nodeToInsert.readableKey + "After" + " " + insertAfter);
 
     int key = nodeToInsert.key;

@@ -69,6 +69,7 @@ public class Node {
       k = "D_" + keyPrint;
     else
       k = "N_" + keyPrint;
-    return "(" + binaryString + k + ", " + mark + ")";
+    // return "(" + binaryString + k + ", " + mark + ")";
+    return "(" + k + ", " + mark + ")";
   }
 }

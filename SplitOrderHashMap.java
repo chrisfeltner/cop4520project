@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SplitOrderHashMap {
-  final double MAX_LOAD = .9;
+  final double MAX_LOAD = 2;
   final static int THRESHHOLD = 10;
   final static int DIGIT_COUNT = 8;
   AtomicInteger itemCount;
@@ -19,9 +19,8 @@ public class SplitOrderHashMap {
    */
   public SplitOrderHashMap() {
     // size of bucket list
-    this.size = new AtomicInteger(2);
+    this.size = new AtomicInteger(1);
     this.buckets = new ArrayList<Node>(size.intValue());
-    this.buckets.add(null);
     this.buckets.add(null);
     Node head = new Node(makeSentinelKey(0), 0, 1);
     this.buckets.set(0, head);
@@ -41,7 +40,7 @@ public class SplitOrderHashMap {
   public static int makeOrdinaryKey(int data) {
     Integer code;
     if (DIGIT_COUNT == 8)
-      code = data & 0x0000000F;
+      code = data & 0x000000FF;
     else
       code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
@@ -58,7 +57,7 @@ public class SplitOrderHashMap {
   public static int makeSentinelKey(int data) {
     Integer code;
     if (DIGIT_COUNT == 8)
-      code = data & 0x0000000F;
+      code = data & 0x000000FF;
     else
       code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
@@ -161,8 +160,11 @@ public class SplitOrderHashMap {
     int bucket = key % size();
 
     if (this.buckets.get(bucket) == null) {
+      // System.out.println("BUCKET DOESN'T EXIST YET");
       initialize_bucket(bucket);
     }
+    // System.out.println("Testing");
+    // System.out.println(this);
 
     // fail to insertAt into the lockFreeList, return 0
     if (!this.lockFreeList.insertAt(newNode, this.buckets.get(bucket))) {
@@ -172,7 +174,8 @@ public class SplitOrderHashMap {
     }
 
     int csize = size();
-    if ((double) (this.itemCount.getAndIncrement() / csize) > MAX_LOAD) {
+    if ((double) (this.itemCount.incrementAndGet() / csize) > MAX_LOAD) {
+      // System.out.println("EXPANDING");
       this.size.compareAndSet(csize, 2 * csize);
       // double size of array list add nulls
       // TODO: how does this resizing work with binary???
@@ -180,6 +183,8 @@ public class SplitOrderHashMap {
         this.buckets.add(null);
       }
     }
+    // System.out.println("Variable 1 = " + this.itemCount.get());
+    // System.out.println("Variable 2 = " + this.size.get());
     return 1;
   }
 
