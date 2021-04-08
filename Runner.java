@@ -1,5 +1,5 @@
-public class Runner {
 
+public class Runner {
   /**
    * Main method.
    *
@@ -30,19 +30,18 @@ public class Runner {
     // System.out.println(list.toString());
     // list.delete(50);
     // System.out.println(list.toString());
+   
 
-
-    System.out.println("Testing SplitOrderedHashMap");
-    SplitOrderHashMap hashmap = new SplitOrderHashMap();
+    // System.out.println("Testing SplitOrderedHashMap");
+    // SplitOrderHashMap hashmap = new SplitOrderHashMap();
+    // // System.out.println(hashmap);
+    // // int[] bag = new int[]{ 0,5,8,1,9,10,3,2,7,6,4}; 
+    // for (int i = 1; i<5; i++)
+    // {
+    //   hashmap.insert(i);
+    //   // System.out.println("Inserting " + i);
+    // }
     // System.out.println(hashmap);
-    // int[] bag = new int[]{ 0,5,8,1,9,10,3,2,7,6,4}; 
-    for (int i = 0; i<10; i++)
-    {
-      hashmap.insert(i);
-      // System.out.println("Inserting " + i);
-    }
-    hashmap.insert(1);
-    System.out.println(hashmap);
 
 
     // hashmap.insert(1);

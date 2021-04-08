@@ -1,5 +1,9 @@
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.Test;
 
 public class SplitOrderHashMap {
   final double MAX_LOAD = 2;
@@ -28,8 +32,6 @@ public class SplitOrderHashMap {
     this.itemCount = new AtomicInteger(0);
 
     this.lockFreeList = new LockFreeList(head);
-
-
   }
 
   /**
@@ -131,11 +133,9 @@ public class SplitOrderHashMap {
       return 1;
     else
       return 0;
-
   }
-
+  
   public int delete(int key) {
-
     int bucket = key % size();
     Node bucketIndex = this.buckets.get(bucket);
     if (bucketIndex == null) {
@@ -150,7 +150,6 @@ public class SplitOrderHashMap {
     this.itemCount.getAndDecrement();
 
     return 1;
-
   }
 
   public int insert(int key) {
@@ -174,7 +173,7 @@ public class SplitOrderHashMap {
     }
 
     int csize = size();
-    if ((double) (this.itemCount.incrementAndGet() / csize) > MAX_LOAD) {
+    if ((double) (this.itemCount.incrementAndGet() / csize) >= MAX_LOAD) {
       // System.out.println("EXPANDING");
       this.size.compareAndSet(csize, 2 * csize);
       // double size of array list add nulls

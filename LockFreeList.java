@@ -1,5 +1,9 @@
+import static org.junit.Assert.assertEquals;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
+
+import org.junit.Test;
 
 public class LockFreeList {
   Node head;
@@ -23,6 +27,18 @@ public class LockFreeList {
     this.itemCount = new AtomicInteger(1);
     this.curr = head;
   }
+
+  // // Tests for the list constructor
+  // @Test 
+  // public void testLockFreeList() throws Exception
+  // {
+  //   LockFreeList list = new LockFreeList();
+  //   // checking head node
+  //   assertEquals(list.head.dummy, true);
+  //   assertEquals(Integer.compareUnsigned(0, list.head.key), 0);
+  //   //checking tail
+  //   assertEquals(list.head.next, null);
+  // }
 
   /**
    * Check if a key is in the list.
