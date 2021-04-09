@@ -79,8 +79,11 @@ public class SplitOrderHashMap {
     int bk_parent = _bitKey(parent);
 
     Node dummy = new Node(bk_bucket, 1);
+    System.out.println("Value of bucket is: " + bk_bucket);
+    System.out.println("Value of bucket parent is: " + bk_parent);
     // if insert doesn't fail, dummy node with parent key now in list.
     // node to insert / insert after
+    System.out.println(this.buckets.get(bk_parent));
     if (!this.lockFreeList.insertAt(dummy, this.buckets.get(bk_parent))) {
       // does this violate our linearizability??? if another thread calls find()
       // delete dummy if insert failed. reset with curr from the find operation in

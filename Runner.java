@@ -25,11 +25,10 @@ public class Runner {
     list.delete(50);
     System.out.println(list.toString());
 
-
     System.out.println("Testing SplitOrderedHashMap");
     SplitOrderHashMap hashmap = new SplitOrderHashMap();
     System.out.println(hashmap);
-    hashmap.insert(1);
+    hashmap.insert(10);
     System.out.println(hashmap);
     hashmap.insert(3);
     System.out.println(hashmap);

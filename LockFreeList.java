@@ -5,6 +5,7 @@ public class LockFreeList {
   Node head;
   AtomicInteger itemCount;
   Node curr;
+
   /**
    * Create a new LockFreeList using the head of an existing LockFreeList.
    *
@@ -22,6 +23,9 @@ public class LockFreeList {
     this.curr = head;
   }
 
+  /**
+   * Create a new LockFreeList.
+   */
   public LockFreeList() {
     this.head = new Node(Integer.MIN_VALUE, new AtomicMarkableReference<Node>(null, false));
     this.itemCount = new AtomicInteger(0);
@@ -106,8 +110,9 @@ public class LockFreeList {
    * @return True if successful
    */
   public boolean insertAt(Node nodeToInsert, Node insertAfter) {
-    if (insertAfter == null)
+    if (insertAfter == null) {
       return insert(nodeToInsert);
+    }
     Node prev = null;
     while (insertAfter != null && nodeToInsert.key < insertAfter.key) {
       prev = insertAfter;
