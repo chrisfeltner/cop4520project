@@ -1,6 +1,6 @@
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
-
+import java.lang.Integer;
 public class LockFreeList {
   Node head;
   AtomicInteger itemCount;
@@ -150,7 +150,6 @@ public class LockFreeList {
     while (true) {
       Window window = findAfter(head, key);
       Node pred = window.pred, curr = window.curr;
-      System.out.println("LOOK AT ME :D: \t" + pred + " " + curr);
       if (Integer.compareUnsigned(curr.key, key) != 0) {
         return null;
       } else {
@@ -196,7 +195,7 @@ public class LockFreeList {
     Node current = this.head;
     String string = "";
     while (current != null) {
-      string += current.toString() + " " + Integer.toUnsignedString​(current.key) + " " + " -> ";
+      string += current.toString() + " " + Integer.toUnsignedString(current.key) + " " + " -> ";
       current = current.next.getReference();
     }
     string += "NULL";

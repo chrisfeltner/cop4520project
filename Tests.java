@@ -1,5 +1,4 @@
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -11,7 +10,7 @@ public class Tests {
     SplitOrderHashMap map1 = new SplitOrderHashMap();
     map1.insert(2);
     // insert an element, find it 
-    assertEquals(1, map1.find(2));
+    assertEquals(true, map1.find(2));
   }
 
   @Test
@@ -23,7 +22,7 @@ public class Tests {
     map2.insert(3);
     map2.insert(6);
     map2.insert(9);
-    assertEquals(0, map2.find(1));
+    assertEquals(false, map2.find(1));
   }
 
   @Test
@@ -38,11 +37,11 @@ public class Tests {
     map3.insert(30);
 
     // find the entire list
-    assertEquals(1, map3.find(10));
-    assertEquals(1, map3.find(15));
-    assertEquals(1, map3.find(20));
-    assertEquals(1, map3.find(25));
-    assertEquals(1, map3.find(30));
+    assertEquals(true, map3.find(10));
+    assertEquals(true, map3.find(15));
+    assertEquals(true, map3.find(20));
+    assertEquals(true, map3.find(25));
+    assertEquals(true, map3.find(30));
   }
 
   @Test
@@ -50,7 +49,7 @@ public class Tests {
   {
     //SubTest 4: try to find on an empty hashMap
     SplitOrderHashMap map4 = new SplitOrderHashMap();
-    assertEquals(0, map4.find(2));
+    assertEquals(false, map4.find(2));
   }
 
   @Test
@@ -65,28 +64,28 @@ public class Tests {
     
     // check the traversal is as expected
     Node current1 = map1.lockFreeList.head;
-    assertEquals(current1.readableKey, 0);
-    assertEquals(current1.dummy, true);
+    assertEquals(0, current1.data);
+    assertEquals(true, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(current1.readableKey, 4);
-    assertEquals(current1.dummy, false);
+    assertEquals(4, current1.data);
+    assertEquals(false, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(current1.readableKey, 2);
-    assertEquals(current1.dummy, false);
+    assertEquals(2, current1.data);
+    assertEquals(false, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(current1.readableKey, 1);
-    assertEquals(current1.dummy, true);
+    assertEquals(1, current1.data);
+    assertEquals(true, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(current1.readableKey, 1);
-    assertEquals(current1.dummy, false);
+    assertEquals(1, current1.data);
+    assertEquals(false, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(current1.readableKey, 3);
-    assertEquals(current1.dummy, false);
+    assertEquals(3, current1.data);
+    assertEquals(false, current1.dummy);
   }
 
   @Test
@@ -101,28 +100,28 @@ public class Tests {
     
     // check the traversal is as expected
     Node current2 = map2.lockFreeList.head;
-    assertEquals(current2.readableKey, 0);
-    assertEquals(current2.dummy, true);
+    assertEquals(0, current2.data);
+    assertEquals(true, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(current2.readableKey, 4);
-    assertEquals(current2.dummy, false);
+    assertEquals(4, current2.data);
+    assertEquals(false, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(current2.readableKey, 2);
-    assertEquals(current2.dummy, false);
+    assertEquals(2, current2.data);
+    assertEquals(false, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(current2.readableKey, 1);
-    assertEquals(current2.dummy, true);
+    assertEquals(1, current2.data);
+    assertEquals(true, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(current2.readableKey, 1);
-    assertEquals(current2.dummy, false);
+    assertEquals(1, current2.data);
+    assertEquals(false, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(current2.readableKey, 3);
-    assertEquals(current2.dummy, false);
+    assertEquals(3, current2.data);
+    assertEquals(false, current2.dummy);
   }
 
   @Test
@@ -137,28 +136,28 @@ public class Tests {
     
     // check the traversal is as expected
     Node current3 = map3.lockFreeList.head;
-    assertEquals(current3.readableKey, 0);
-    assertEquals(current3.dummy, true);
+    assertEquals(0, current3.data);
+    assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(current3.readableKey, 4);
-    assertEquals(current3.dummy, false);
+    assertEquals(4, current3.data);
+    assertEquals(false, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(current3.readableKey, 2);
-    assertEquals(current3.dummy, false);
+    assertEquals(2, current3.data);
+    assertEquals(false, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(current3.readableKey, 1);
-    assertEquals(current3.dummy, true);
+    assertEquals(1, current3.data);
+    assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(current3.readableKey, 1);
-    assertEquals(current3.dummy, false);
+    assertEquals(1, current3.data);
+    assertEquals(false, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(current3.readableKey, 3);
-    assertEquals(current3.dummy, false);
+    assertEquals(3, current3.data);
+    assertEquals(false, current3.dummy);
   }
 
   @Test
@@ -176,28 +175,28 @@ public class Tests {
     
     // check the traversal is as expected
     Node current4 = map4.lockFreeList.head;
-    assertEquals(current4.readableKey, 0);
-    assertEquals(current4.dummy, true);
+    assertEquals(0, current4.data);
+    assertEquals(true, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(current4.readableKey, 4);
-    assertEquals(current4.dummy, false);
+    assertEquals(4, current4.data);
+    assertEquals(false, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(current4.readableKey, 2);
-    assertEquals(current4.dummy, false);
+    assertEquals(2, current4.data);
+    assertEquals(false, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(current4.readableKey, 1);
-    assertEquals(current4.dummy, true);
+    assertEquals(1, current4.data);
+    assertEquals(true, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(current4.readableKey, 1);
-    assertEquals(current4.dummy, false);
+    assertEquals(1, current4.data);
+    assertEquals(false, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(current4.readableKey, 3);
-    assertEquals(current4.dummy, false);
+    assertEquals(3, current4.data);
+    assertEquals(false, current4.dummy);
   }
 
 
@@ -215,24 +214,24 @@ public class Tests {
     
     // check the traversal is as expected
     Node current1 = map1.lockFreeList.head;
-    assertEquals(current1.readableKey, 0);
-    assertEquals(current1.dummy, true);
+    assertEquals(0, current1.data);
+    assertEquals(true, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(current1.readableKey, 2);
-    assertEquals(current1.dummy, false);
+    assertEquals(2, current1.data);
+    assertEquals(false, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(current1.readableKey, 1);
-    assertEquals(current1.dummy, true);
+    assertEquals(1, current1.data);
+    assertEquals(true, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(current1.readableKey, 1);
-    assertEquals(current1.dummy, false);
+    assertEquals(1, current1.data);
+    assertEquals(false, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(current1.readableKey, 3);
-    assertEquals(current1.dummy, false);
+    assertEquals(3, current1.data);
+    assertEquals(false, current1.dummy);
   }
 
   @Test
@@ -250,20 +249,20 @@ public class Tests {
     
     // check the traversal is as expected
     Node current2 = map2.lockFreeList.head;
-    assertEquals(current2.readableKey, 0);
-    assertEquals(current2.dummy, true);
+    assertEquals(0, current2.data);
+    assertEquals(true, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(current2.readableKey, 2);
-    assertEquals(current2.dummy, false);
+    assertEquals(2, current2.data);
+    assertEquals(false, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(current2.readableKey, 1);
-    assertEquals(current2.dummy, true);
+    assertEquals(1, current2.data);
+    assertEquals(true, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(current2.readableKey, 3);
-    assertEquals(current2.dummy, false);
+    assertEquals(3, current2.data);
+    assertEquals(false, current2.dummy);
   }
 
   @Test
@@ -283,12 +282,20 @@ public class Tests {
 
     // check the traversal is as expected
     Node current3 = map3.lockFreeList.head;
-    assertEquals(current3.readableKey, 0);
-    assertEquals(current3.dummy, true);
+    assertEquals(0, current3.data);
+    assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(current3.readableKey, 1);
-    assertEquals(current3.dummy, true);
+    assertEquals(2, current3.data);
+    assertEquals(true, current3.dummy);
+    current3 = current3.next.getReference();
+
+    assertEquals(1, current3.data);
+    assertEquals(true, current3.dummy);
+    current3 = current3.next.getReference();
+
+    assertEquals(3, current3.data);
+    assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
   }
 
@@ -306,23 +313,28 @@ public class Tests {
     map4.delete(2);
     map4.delete(1);
     map4.delete(1);
-    
+
     // check the traversal is as expected
     Node current4 = map4.lockFreeList.head;
-    assertEquals(current4.readableKey, 0);
-    assertEquals(current4.dummy, true);
+    assertEquals(0, current4.data);
+    assertEquals(true, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(current4.readableKey, 4);
-    assertEquals(current4.dummy, false);
+    assertEquals(4, current4.data);
+    assertEquals(false, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(current4.readableKey, 1);
-    assertEquals(current4.dummy, true);
+    assertEquals(2, current4.data);
+    assertEquals(true, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(current4.readableKey, 3);
-    assertEquals(current4.dummy, false);
+    assertEquals(1, current4.data);
+    assertEquals(true, current4.dummy);
+    current4 = current4.next.getReference();
+
+    assertEquals(3, current4.data);
+    assertEquals(false, current4.dummy);
+    current4 = current4.next.getReference();
   }
 
 }

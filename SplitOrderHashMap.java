@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-
 public class SplitOrderHashMap {
   final double MAX_LOAD = 2;
   final static int THRESHHOLD = 10;
@@ -103,12 +102,13 @@ public class SplitOrderHashMap {
     if (bucket == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
       initialize_bucket(bucketIndex);
+      bucket = this.buckets.get(bucketIndex);
     }
 
     // TODO: need a findAt() function
     Window window = this.lockFreeList.findAfter(bucket, makeOrdinaryKey(data));
     Node pred = window.pred, curr = window.curr;
-    if (curr != null)
+    if (curr != null && curr.data == data)
       return true;
     else
       return false;
@@ -140,7 +140,7 @@ public class SplitOrderHashMap {
     // fail to insertAt into the lockFreeList, return 0
     Node result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), data, false);
     if (result == null) {
-      System.out.println("Could NOT insert " + data);
+      //System.out.println("Could NOT insert " + data);
       // delete node
       return false;
     }
