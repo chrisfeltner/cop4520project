@@ -1,16 +1,11 @@
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.junit.Test;
 
 public class SplitOrderHashMap {
   final double MAX_LOAD = 2;
   final static int THRESHHOLD = 10;
-  final static int DIGIT_COUNT = 8;
   AtomicInteger itemCount;
-  AtomicInteger size;
+  AtomicInteger numBuckets;
   // underlying LockFreeList
   LockFreeList lockFreeList;
 
@@ -23,15 +18,15 @@ public class SplitOrderHashMap {
    */
   public SplitOrderHashMap() {
     // size of bucket list
-    this.size = new AtomicInteger(1);
-    this.buckets = new ArrayList<Node>(size.intValue());
+    this.numBuckets = new AtomicInteger(1);
+    this.buckets = new ArrayList<Node>(numBuckets.intValue());
     this.buckets.add(null);
-    Node head = new Node(makeSentinelKey(0), 0, 1);
-    this.buckets.set(0, head);
+    // Node head = new Node(0, 0, 1);
     // num items in hash map
     this.itemCount = new AtomicInteger(0);
 
-    this.lockFreeList = new LockFreeList(head);
+    this.lockFreeList = new LockFreeList();
+    this.buckets.set(0, this.lockFreeList.head);
   }
 
   /**
@@ -41,10 +36,7 @@ public class SplitOrderHashMap {
    */
   public static int makeOrdinaryKey(int data) {
     Integer code;
-    if (DIGIT_COUNT == 8)
-      code = data & 0x000000FF;
-    else
-      code = data & 0x00FFFFFF;
+    code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
     code |= 1;
     return code;
@@ -58,10 +50,7 @@ public class SplitOrderHashMap {
    */
   public static int makeSentinelKey(int data) {
     Integer code;
-    if (DIGIT_COUNT == 8)
-      code = data & 0x000000FF;
-    else
-      code = data & 0x00FFFFFF;
+    code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
     return code;
   }
@@ -70,12 +59,12 @@ public class SplitOrderHashMap {
     return this.itemCount.intValue();
   }
 
-  public int size() {
-    return this.size.intValue();
+  public int numBuckets() {
+    return this.numBuckets.intValue();
   }
 
   private int getParent(int myBucket) {
-    int parent = size();
+    int parent = numBuckets();
     do {
       parent = parent >> 1;
     } while (parent > myBucket);
@@ -90,101 +79,83 @@ public class SplitOrderHashMap {
    */
   private void initialize_bucket(int bucket) {
     // this would be binary
-    int bucketKey = makeSentinelKey(bucket);
+    // int bucketKey = makeSentinelKey(bucket);
     int parent = getParent(bucket);
-
-    // make this bits
-    int parentKey = makeSentinelKey(parent);
-
-    Node dummy = new Node(bucketKey, bucket, 1);
-    // if insert doesn't fail, dummy node with parent key now in list.
-    // node to insert / insert after
-    //System.out.println("INIT BUCKET " + this.buckets.get(parent));
-    if (!this.lockFreeList.insertAt(dummy, this.buckets.get(parent))) {
-      // does this violate our linearizability??? if another thread calls find()
-      // delete dummy if insert failed. reset with curr from the find operation in
-      // insert call
-      dummy = this.lockFreeList.curr;
-      dummy.dummy = true;
+    if (this.buckets.get(parent) == null)
+    {
+      System.out.println("PARENTS does not exist so we're initialize parent: \t" + parent);
+      initialize_bucket(parent);
     }
 
-    // finally, init bucket with dummy node
-    this.buckets.set(bucket, dummy);
+    Node result = this.lockFreeList.insertAt(this.buckets.get(parent), bucket , true);
 
-    // pseudocode get parent macro that unsets buckets most sig, turned on bit. if
-    // exact
-    // dummy node already exists in list, maybe another process already tried to
-    // initialize same bucket
-    // in this case, fail and p
+    if (result != null)
+    {
+      // finally, init bucket with dummy node
+      this.buckets.set(bucket, result);
+    }
 
-    // parent = GET_PARENT(bucket)
   }
 
-  public int find(int key) {
-    int bucket = key % size();
-    Node bucketIndex = this.buckets.get(bucket);
-    if (bucketIndex == null) {
+  public boolean find(int data) {
+    int bucketIndex = data % numBuckets();
+    Node bucket = this.buckets.get(bucketIndex);
+    if (bucket == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
-      initialize_bucket(bucket);
+      initialize_bucket(bucketIndex);
     }
 
     // TODO: need a findAt() function
-    if (this.lockFreeList.findAfter(bucketIndex, key))
-      return 1;
+    Window window = this.lockFreeList.findAfter(bucket, makeOrdinaryKey(data));
+    Node pred = window.pred, curr = window.curr;
+    if (curr != null)
+      return true;
     else
-      return 0;
+      return false;
   }
   
-  public int delete(int key) {
-    int bucket = key % size();
-    Node bucketIndex = this.buckets.get(bucket);
-    if (bucketIndex == null) {
+  public boolean delete(int data) {
+    int bucketIndex = data % numBuckets();
+    Node bucket = this.buckets.get(bucketIndex);
+    if (bucket == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
-      initialize_bucket(bucket);
+      initialize_bucket(bucketIndex);
     }
 
-    if (!this.lockFreeList.deleteAfter(this.buckets.get(bucket), key)) {
-      return 0;
+    Node result = this.lockFreeList.deleteAfter(this.buckets.get(bucketIndex), data);
+    if (result == null) {
+      return false;
     }
-
     this.itemCount.getAndDecrement();
-
-    return 1;
+    return true;
   }
 
-  public int insert(int key) {
-    // this key will be binary eventually
-    Node newNode = new Node(makeOrdinaryKey(key), key, 0); // next is null
+  public boolean insert(int data) {
+    int bucketIndex = data % numBuckets();
 
-    int bucket = key % size();
-
-    if (this.buckets.get(bucket) == null) {
-      // System.out.println("BUCKET DOESN'T EXIST YET");
-      initialize_bucket(bucket);
+    if (this.buckets.get(bucketIndex) == null) {
+      initialize_bucket(bucketIndex);
     }
-    // System.out.println("Testing");
-    // System.out.println(this);
 
     // fail to insertAt into the lockFreeList, return 0
-    if (!this.lockFreeList.insertAt(newNode, this.buckets.get(bucket))) {
-      System.out.println("Could NOT insert " + key);
+    Node result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), data, false);
+    if (result == null) {
+      System.out.println("Could NOT insert " + data);
       // delete node
-      return 0;
+      return false;
     }
 
-    int csize = size();
-    if ((double) (this.itemCount.incrementAndGet() / csize) >= MAX_LOAD) {
+    int localNumBuckets = numBuckets();
+    if ((double) (this.itemCount.incrementAndGet() / localNumBuckets) >= MAX_LOAD) {
       // System.out.println("EXPANDING");
-      this.size.compareAndSet(csize, 2 * csize);
+      this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
       // double size of array list add nulls
       // TODO: how does this resizing work with binary???
-      for (int i = 0; i < csize; i++) {
+      for (int i = localNumBuckets; i < 2*localNumBuckets; i++) {
         this.buckets.add(null);
       }
     }
-    // System.out.println("Variable 1 = " + this.itemCount.get());
-    // System.out.println("Variable 2 = " + this.size.get());
-    return 1;
+    return true;
   }
 
   /**
