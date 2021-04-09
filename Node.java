@@ -6,7 +6,13 @@ public class Node {
   public AtomicMarkableReference<Node> next;
   public boolean dummy;
 
-  // value nodes assigned true to MSB, when reversed becomes LSB
+  /**
+   * Node constructor
+   *
+   * @param data The data of a node
+   * @param next The reference to the next node
+   * @param isDummy true if it is a bucket node, otherwise false
+   */
   public Node(int data, AtomicMarkableReference<Node> next, boolean isDummy) {
     if (isDummy) {
       this.key = makeSentinelKey(data);
@@ -22,6 +28,7 @@ public class Node {
    * Generates a Key for a non-bucket / sentinel node.
    * 
    * @param data The data of a node used to create the key.
+   * @return the oridinary key for the node.
    */
   public static int makeOrdinaryKey(int data) {
     Integer code = data & 0x00FFFFFF;
@@ -35,6 +42,7 @@ public class Node {
    * Generates a Key for a bucket / sentinel node.
    * 
    * @param data The data of a node used to create the key.
+   * @return the sentinel key for the data.
    */
   public static int makeSentinelKey(int data) {
     Integer code = data & 0x00FFFFFF;
@@ -43,10 +51,19 @@ public class Node {
     return code;
   }
 
+  /**
+   * make a binary string
+   * 
+   * @param intToMake The integer we are converting from.
+   * @return the binary string of the integer.
+   */
   public static String makeBinaryString(int intToMake) {
     return String.format("%32s", Integer.toBinaryString(intToMake)).replace(' ', '0');
   }
 
+  /**
+   * prints the node
+   */
   public String toString() {
     if (this.next == null)
     {

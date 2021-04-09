@@ -1,47 +1,27 @@
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.lang.Integer;
+
 public class LockFreeList {
   Node head;
   AtomicInteger itemCount;
   Node curr;
 
   /**
-   * Create a new LockFreeList using the head of an existing LockFreeList.
+   * Create a new LockFreeList 
    *
-   * @param head      The head of an existing LockFreeList
-   * @param itemCount The number of items in an existing list
    */
-  public LockFreeList(Node head) {
-    this.head = head;
-    this.itemCount = new AtomicInteger(1);
-    this.curr = head;
-  }
-
   public LockFreeList() {
     this.head = new Node(0, new AtomicMarkableReference<Node>(null, false), true);
     this.itemCount = new AtomicInteger(1);
     this.curr = head;
   }
 
-  // for Sarah
-  // // Tests for the list constructor
-  // @Test 
-  // public void testLockFreeList() throws Exception
-  // {
-  //   LockFreeList list = new LockFreeList();
-  //   // checking head node
-  //   assertEquals(list.head.dummy, true);
-  //   assertEquals(Integer.compareUnsigned(0, list.head.key), 0);
-  //   //checking tail
-  //   assertEquals(list.head.next, null);
-  // }
-
   /**
    * Check if a key is in the list.
    *
    * @param keyToFind The value to find in the list
-   * @return true if key is in list
+   * @return Window containing the predecessor and current nodes
    */
   public Window find(int keyToFind) {
     return findAfter(this.head, keyToFind);
@@ -51,7 +31,7 @@ public class LockFreeList {
    * Check if a key is in the list.
    *
    * @param keyToFind The value to find in the list
-   * @return true if key is in list
+   * @return Window containing the predecessor and current nodes
    */
   public Window findAfter(Node head, int keyToFind) {
     Node pred = null;
@@ -92,8 +72,8 @@ public class LockFreeList {
   /**
    * Insert a node after the head of the list.
    *
-   * @param nodeToInsert A new node with key set, but next reference null
-   * @return True if successfully inserted
+   * @param data the data to be inserted
+   * @return Node that was inserted
    */
   public Node insert(int data) {
     return insertAt(this.head, data, false);
@@ -102,9 +82,10 @@ public class LockFreeList {
   /**
    * Insert a node after another node.
    *
-   * @param nodeToInsert The new node with next pointer null
-   * @param insertAfter  The node to insert nodeToInsert after
-   * @return True if successful
+   * @param head The head or shortcut in the list (where to start)
+   * @param data  The data to be inserted
+   * @param isDummy  Whether or not the node is a bucket
+   * @return Node that was inserted
    */
   public Node insertAt(Node head, int data, boolean isDummy) {
     int key;
@@ -126,10 +107,10 @@ public class LockFreeList {
   }
 
   /**
-   * Delete the node with specified key if it exists.
+   * Delete the node with specified data if it exists.
    *
-   * @param keyToDelete The key of the node we are trying to delete
-   * @return True if successful
+   * @param data The data of the node we are trying to delete
+   * @return Node of what we deleted
    */
   public Node delete(int data) {
     return deleteAfter(this.head, data);
@@ -140,9 +121,9 @@ public class LockFreeList {
    * specified starting point (used for deletion from hash table using shortcut
    * references).
    *
-   * @param startingPoint Node reference where we will begin our traversal
-   * @param keyToDelete   The key of the node we are trying to delete
-   * @return True if successful
+   * @param head Node reference where we will begin our traversal
+   * @param data   The data of the node we are trying to delete
+   * @return Node that was deleted 
    */
   public Node deleteAfter(Node head, int data) {
     int key = makeOrdinaryKey(data);
@@ -163,10 +144,12 @@ public class LockFreeList {
       }
     }
   }
+
   /**
    * Generates a Key for a non-bucket / sentinel node.
    * 
    * @param data The data of a node used to create the key.
+   * @return the key of a non-bucket node.
    */
   public static int makeOrdinaryKey(int data) {
     Integer code = data & 0x00FFFFFF;
@@ -180,6 +163,7 @@ public class LockFreeList {
    * Generates a Key for a bucket / sentinel node.
    * 
    * @param data The data of a node used to create the key.
+   * @return the sentinel key for the data.
    */
   public static int makeSentinelKey(int data) {
     Integer code = data & 0x00FFFFFF;

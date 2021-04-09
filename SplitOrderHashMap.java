@@ -32,6 +32,7 @@ public class SplitOrderHashMap {
    * Generates a Key for a non-bucket / sentinel node.
    *
    * @param data The data of a node used to create the key.
+   * @return the ordinary key of the data
    */
   public static int makeOrdinaryKey(int data) {
     Integer code;
@@ -46,6 +47,7 @@ public class SplitOrderHashMap {
    * Generates a Key for a bucket / sentinel node.
    *
    * @param data The data of a node used to create the key.
+   * @return the sentinel key of the data node.
    */
   public static int makeSentinelKey(int data) {
     Integer code;
@@ -54,14 +56,25 @@ public class SplitOrderHashMap {
     return code;
   }
 
+  /**
+   * @return num items in hash map.
+   */
   public int num_items() {
     return this.itemCount.intValue();
   }
 
+  /**
+   * @return num buckets in hash map.
+   */
   public int numBuckets() {
     return this.numBuckets.intValue();
   }
-
+  
+  /**
+   * Gets the parent of a given bucket.
+   * * @param myBucket The bucket whose parent will be gotten
+   * @return the index of the parent bucket
+   */
   private int getParent(int myBucket) {
     int parent = numBuckets();
     do {
@@ -75,6 +88,7 @@ public class SplitOrderHashMap {
 
   /**
    * Used Internally by insert() and constructors.
+   * @param bucket the bucket to initialize
    */
   private void initialize_bucket(int bucket) {
     // this would be binary
@@ -96,6 +110,11 @@ public class SplitOrderHashMap {
 
   }
 
+   /**
+   * Try to find a certain data in the map
+   * @param data the data to find
+   * @return whether the data was found in the map
+   */
   public boolean find(int data) {
     int bucketIndex = data % numBuckets();
     Node bucket = this.buckets.get(bucketIndex);
@@ -114,6 +133,11 @@ public class SplitOrderHashMap {
       return false;
   }
   
+  /**
+   * Try to delete a certain data in the map
+   * @param data the data to delete
+   * @return whether or not the data was deleted in the map
+   */
   public boolean delete(int data) {
     int bucketIndex = data % numBuckets();
     Node bucket = this.buckets.get(bucketIndex);
@@ -130,6 +154,11 @@ public class SplitOrderHashMap {
     return true;
   }
 
+  /**
+   * Try to insert a certain data in the map
+   * @param data the data to insert
+   * @return whether or not the data was inserted in the map
+   */
   public boolean insert(int data) {
     int bucketIndex = data % numBuckets();
 
@@ -159,7 +188,7 @@ public class SplitOrderHashMap {
   }
 
   /**
-   * Returns a string representation of the map.
+   * @return a string representation of the map.
    */
   public String toString() {
     String s = "======================================================\nBUCKETS: \n";
