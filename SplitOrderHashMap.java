@@ -9,7 +9,7 @@ public class SplitOrderHashMap {
   LockFreeList lockFreeList;
 
   // dynamically sized buckets array
-  ArrayList<Node> buckets;
+  SegmentTable buckets;
 
   /**
    * Create a Split Ordered hash with initial Node.
@@ -18,8 +18,8 @@ public class SplitOrderHashMap {
   public SplitOrderHashMap() {
     // size of bucket list
     this.numBuckets = new AtomicInteger(1);
-    this.buckets = new ArrayList<Node>(numBuckets.intValue());
-    this.buckets.add(null);
+    this.buckets = new SegmentTable();
+    // this.buckets.add(null);
     // Node head = new Node(0, 0, 1);
     // num items in hash map
     this.itemCount = new AtomicInteger(0);
@@ -180,9 +180,9 @@ public class SplitOrderHashMap {
       this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
       // double size of array list add nulls
       // TODO: how does this resizing work with binary???
-      for (int i = localNumBuckets; i < 2*localNumBuckets; i++) {
-        this.buckets.add(null);
-      }
+      // for (int i = localNumBuckets; i < 2*localNumBuckets; i++) {
+      //   this.buckets.add(null);
+      // }
     }
     return true;
   }
@@ -190,19 +190,19 @@ public class SplitOrderHashMap {
   /**
    * @return a string representation of the map.
    */
-  public String toString() {
-    String s = "======================================================\nBUCKETS: \n";
-    int i = 0;
-    for (Node bucket : buckets) {
-      String b;
-      if (bucket == null) {
-        b = "null";
-      } else {
-        b = bucket.toString();
-      }
-      s = s.concat("bucket" + i + ": " + b + "\n");
-      i += 1;
-    }
-    return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
-  }
+  // public String toString() {
+  //   String s = "======================================================\nBUCKETS: \n";
+  //   int i = 0;
+  //   for (Node bucket : buckets) {
+  //     String b;
+  //     if (bucket == null) {
+  //       b = "null";
+  //     } else {
+  //       b = bucket.toString();
+  //     }
+  //     s = s.concat("bucket" + i + ": " + b + "\n");
+  //     i += 1;
+  //   }
+  //   return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
+  // }
 }
