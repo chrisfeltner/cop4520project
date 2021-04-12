@@ -40,10 +40,11 @@ public class Runner {
     // int[] bag = new int[]{ 0,1,2,4}; 
     for (int i = 0; i<=20; i+=2)
     {
+      System.out.println("----------------------------------------------");
+      System.out.println("Inserting " + i);
       hashmap.insert(i);
-      // System.out.println("Inserting " + i);
+      System.out.println(hashmap.lockFreeList);
     }
-    System.out.println(hashmap.lockFreeList);
     hashmap.insert(15);
     System.out.println(hashmap.lockFreeList);
 

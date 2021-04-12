@@ -101,6 +101,7 @@ public class SplitOrderHashMap {
     }
 
     Node result = this.lockFreeList.insertAt(this.buckets.get(parent), bucket , true);
+    System.out.println("Creating bucket " + bucket);
 
     if (result != null)
     {
@@ -161,6 +162,8 @@ public class SplitOrderHashMap {
    */
   public boolean insert(int data) {
     int bucketIndex = data % numBuckets();
+    System.out.println("Bucket index is " + bucketIndex);
+    System.out.println("Num buckets is " + numBuckets());
 
     if (this.buckets.get(bucketIndex) == null) {
       initialize_bucket(bucketIndex);
@@ -176,7 +179,8 @@ public class SplitOrderHashMap {
 
     int localNumBuckets = numBuckets();
     if ((double) (this.itemCount.incrementAndGet() / localNumBuckets) >= MAX_LOAD) {
-      // System.out.println("EXPANDING");
+      System.out.println("EXPANDING");
+      System.out.println(itemCount.get());
       this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
       // double size of array list add nulls
       // TODO: how does this resizing work with binary???

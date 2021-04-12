@@ -179,7 +179,7 @@ public class LockFreeList {
     Node current = this.head;
     String string = "";
     while (current != null) {
-      string += current.toString() + " " + Integer.toUnsignedString(current.key) + " " + " -> ";
+      string += current.toString() + " -> ";
       current = current.next.getReference();
     }
     string += "NULL";
