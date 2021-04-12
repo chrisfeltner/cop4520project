@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 public class SplitOrderHashMap {
   final double MAX_LOAD = 2;
@@ -101,7 +100,6 @@ public class SplitOrderHashMap {
     }
 
     Node result = this.lockFreeList.insertAt(this.buckets.get(parent), bucket , true);
-    System.out.println("Creating bucket " + bucket);
 
     if (result != null)
     {
@@ -162,8 +160,6 @@ public class SplitOrderHashMap {
    */
   public boolean insert(int data) {
     int bucketIndex = data % numBuckets();
-    System.out.println("Bucket index is " + bucketIndex);
-    System.out.println("Num buckets is " + numBuckets());
 
     if (this.buckets.get(bucketIndex) == null) {
       initialize_bucket(bucketIndex);
@@ -179,8 +175,6 @@ public class SplitOrderHashMap {
 
     int localNumBuckets = numBuckets();
     if ((double) (this.itemCount.incrementAndGet() / localNumBuckets) >= MAX_LOAD) {
-      System.out.println("EXPANDING");
-      System.out.println(itemCount.get());
       this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
       // double size of array list add nulls
       // TODO: how does this resizing work with binary???
@@ -194,19 +188,45 @@ public class SplitOrderHashMap {
   /**
    * @return a string representation of the map.
    */
-  // public String toString() {
-  //   String s = "======================================================\nBUCKETS: \n";
-  //   int i = 0;
-  //   for (Node bucket : buckets) {
-  //     String b;
-  //     if (bucket == null) {
-  //       b = "null";
-  //     } else {
-  //       b = bucket.toString();
-  //     }
-  //     s = s.concat("bucket" + i + ": " + b + "\n");
-  //     i += 1;
-  //   }
-  //   return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
-  // }
+  public String toString() {
+    String s = "======================================================\nBUCKETS: \n";
+    // int i = 0;
+    // for (Node bucket : buckets) {
+    //   String b;
+    //   if (bucket == null) {
+    //     b = "null";
+    //   } else {
+    //     b = bucket.toString();
+    //   }
+    //   s = s.concat("bucket" + i + ": " + b + "\n");
+    //   i += 1;
+    // }
+    final int out = SegmentTable.OUTER_SIZE;
+    final int in = SegmentTable.MIDDLE_SIZE;
+    final int segSize = SegmentTable.SEGMENT_SIZE;
+    // Loop through all active segments in order to print the segment table
+    for (int i = 0; i < out; i++)
+    {
+      if (this.buckets.outerArray.get(i) != null)
+      {
+        s = s.concat("outer array position : " + i + "\n");
+        for (int j = 0; j < in; j++)
+        {
+          if (this.buckets.outerArray.get(i).get(j) != null)
+          {
+            s = s.concat("\tinner array position : " + j + "\n");
+            for (int k = 0; k < segSize; k++)
+            {
+              Node node = this.buckets.outerArray.get(i).get(j).segment.get(k);
+              if (node != null)
+              {
+                s = s.concat("\t\tsegment position : " + k + " " + node.toString() + " \n");
+              }
+            }
+          }
+        }
+      }
+    }
+    return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
+  }
 }
