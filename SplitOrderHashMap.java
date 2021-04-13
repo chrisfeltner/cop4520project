@@ -162,7 +162,8 @@ public class SplitOrderHashMap {
   public boolean insert(int data) {
     int bucketIndex = data % numBuckets();
 
-    if (this.buckets.get(bucketIndex) == null) {
+    if (this.buckets.get(bucketIndex) == null) 
+    {
       initialize_bucket(bucketIndex);
     }
 
@@ -177,11 +178,14 @@ public class SplitOrderHashMap {
     int localNumBuckets = numBuckets();
     if ((double) (this.itemCount.incrementAndGet() / localNumBuckets) >= MAX_LOAD) {
       // System.out.println("EXPANDING");
-      this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
-      // double size of array list add nulls
-      // TODO: how does this resizing work with binary???
-      for (int i = localNumBuckets; i < 2*localNumBuckets; i++) {
-        this.buckets.add(null);
+      if(this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets))
+      {
+        // double size of array list add nulls
+        // TODO: how does this resizing work with binary???
+        for (int i = localNumBuckets; i < 2*localNumBuckets; i++) 
+        {
+          this.buckets.add(null);
+        }
       }
     }
     return true;
