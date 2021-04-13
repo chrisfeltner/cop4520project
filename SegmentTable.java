@@ -42,7 +42,7 @@ public class SegmentTable {
         // If inner array is null create new array of segments
         if (innerArray == null)
         {
-            outerArray.set(bucket / (MIDDLE_SIZE * SEGMENT_SIZE), new AtomicReferenceArray<Segment>(MIDDLE_SIZE));
+            outerArray.compareAndSet(bucket / (MIDDLE_SIZE * SEGMENT_SIZE), null, new AtomicReferenceArray<Segment>(MIDDLE_SIZE));
             innerArray = outerArray.get(bucket / (MIDDLE_SIZE * SEGMENT_SIZE));
         }
         // Divide by segment size to get current segment
@@ -50,7 +50,7 @@ public class SegmentTable {
         // If current segment is null create a new segment
         if (seg == null)
         {
-            innerArray.set(bucket / SEGMENT_SIZE, new Segment());
+            innerArray.compareAndSet(bucket / SEGMENT_SIZE, null, new Segment());
             seg = innerArray.get(bucket / SEGMENT_SIZE);
         }
         // Bucket % segment size gives the proper position in the segment where the dummy node should be inserted
