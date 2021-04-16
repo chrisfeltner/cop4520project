@@ -9,8 +9,8 @@ public class Node {
   /**
    * Node constructor
    *
-   * @param data The data of a node
-   * @param next The reference to the next node
+   * @param data    The data of a node
+   * @param next    The reference to the next node
    * @param isDummy true if it is a bucket node, otherwise false
    */
   public Node(int data, AtomicMarkableReference<Node> next, boolean isDummy) {
@@ -65,8 +65,7 @@ public class Node {
    * prints the node
    */
   public String toString() {
-    if (this.next == null)
-    {
+    if (this.next == null) {
       return "NULL";
     }
     boolean mark = next.isMarked();

@@ -9,13 +9,12 @@ public class Runner {
     // System.out.println("Testing LockFreeList");
     // LockFreeList list = new LockFreeList();
     // System.out.println(list.toString());
-    // int[] bag = new int[]{ 0,10,5 }; 
+    // int[] bag = new int[]{ 0,10,5 };
     // for (int i = 5; i > 0; i--)
     // {
-    //   list.insert(i);
-    //   System.out.println(list.toString());
+    // list.insert(i);
+    // System.out.println(list.toString());
     // }
-
 
     // list.insert(new Node(30, null));
     // System.out.println(list.toString());
@@ -32,21 +31,18 @@ public class Runner {
     // System.out.println(list.toString());
     // list.delete(50);
     // System.out.println(list.toString());
-   
 
     System.out.println("Testing SplitOrderedHashMap");
     SplitOrderHashMap hashmap = new SplitOrderHashMap();
     System.out.println(hashmap);
-    // int[] bag = new int[]{ 0,1,2,4}; 
-    for (int i = 0; i<=20; i+=2)
-    {
+    // int[] bag = new int[]{ 0,1,2,4};
+    for (int i = 0; i <= 20; i += 2) {
       hashmap.insert(i);
       // System.out.println("Inserting " + i);
     }
     System.out.println(hashmap);
     hashmap.insert(15);
     System.out.println(hashmap);
-
 
     // hashmap.insert(1);
     // System.out.println();
@@ -71,7 +67,6 @@ public class Runner {
 
     // hashmap.insert(2);
     // System.out.println();
-
 
     // System.out.println(hashmap);
     // System.out.println("Inserting 20");
