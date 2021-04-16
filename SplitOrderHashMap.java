@@ -107,7 +107,7 @@ public class SplitOrderHashMap {
   }
 
   /**
-   * Try to find a certain data in the map
+   * Try to find a certain data in the map.
    * 
    * @param data the data to find
    * @return whether the data was found in the map
