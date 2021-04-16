@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+
 public class SplitOrderHashMap {
   final double MAX_LOAD = 2;
   final static int THRESHHOLD = 10;
@@ -43,8 +44,7 @@ public class SplitOrderHashMap {
   }
 
   /**
-   * FOR TOSTRING()
-   * Generates a Key for a bucket / sentinel node.
+   * FOR TOSTRING() Generates a Key for a bucket / sentinel node.
    *
    * @param data The data of a node used to create the key.
    * @return the sentinel key of the data node.
@@ -69,10 +69,11 @@ public class SplitOrderHashMap {
   public int numBuckets() {
     return this.numBuckets.intValue();
   }
-  
+
   /**
-   * Gets the parent of a given bucket.
-   * * @param myBucket The bucket whose parent will be gotten
+   * Gets the parent of a given bucket. * @param myBucket The bucket whose parent
+   * will be gotten
+   * 
    * @return the index of the parent bucket
    */
   private int getParent(int myBucket) {
@@ -84,34 +85,32 @@ public class SplitOrderHashMap {
     return parent;
   }
 
-
-
   /**
    * Used Internally by insert() and constructors.
+   * 
    * @param bucket the bucket to initialize
    */
   private void initialize_bucket(int bucket) {
     // this would be binary
     // int bucketKey = makeSentinelKey(bucket);
     int parent = getParent(bucket);
-    if (this.buckets.get(parent) == null)
-    {
+    if (this.buckets.get(parent) == null) {
       System.out.println("PARENTS does not exist so we're initialize parent: \t" + parent);
       initialize_bucket(parent);
     }
 
-    Node result = this.lockFreeList.insertAt(this.buckets.get(parent), bucket , true);
+    Node result = this.lockFreeList.insertAt(this.buckets.get(parent), bucket, true);
 
-    if (result != null)
-    {
+    if (result != null) {
       // finally, init bucket with dummy node
       this.buckets.set(bucket, result);
     }
 
   }
 
-   /**
+  /**
    * Try to find a certain data in the map
+   * 
    * @param data the data to find
    * @return whether the data was found in the map
    */
@@ -132,9 +131,10 @@ public class SplitOrderHashMap {
     else
       return false;
   }
-  
+
   /**
    * Try to delete a certain data in the map
+   * 
    * @param data the data to delete
    * @return whether or not the data was deleted in the map
    */
@@ -156,6 +156,7 @@ public class SplitOrderHashMap {
 
   /**
    * Try to insert a certain data in the map
+   * 
    * @param data the data to insert
    * @return whether or not the data was inserted in the map
    */
@@ -169,7 +170,7 @@ public class SplitOrderHashMap {
     // fail to insertAt into the lockFreeList, return 0
     Node result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), data, false);
     if (result == null) {
-      //System.out.println("Could NOT insert " + data);
+      // System.out.println("Could NOT insert " + data);
       // delete node
       return false;
     }
@@ -180,7 +181,7 @@ public class SplitOrderHashMap {
       this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
       // double size of array list add nulls
       // TODO: how does this resizing work with binary???
-      for (int i = localNumBuckets; i < 2*localNumBuckets; i++) {
+      for (int i = localNumBuckets; i < 2 * localNumBuckets; i++) {
         this.buckets.add(null);
       }
     }
