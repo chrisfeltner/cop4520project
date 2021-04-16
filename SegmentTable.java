@@ -18,7 +18,7 @@ public class SegmentTable {
     // Upon creation of segment table make segment 0 active for dummy node 0
     this.outerArray = new AtomicReferenceArray<>(OUTER_SIZE);
     outerArray.set(0, new AtomicReferenceArray<Segment>(MIDDLE_SIZE));
-    outerArray.get(0).set(0, new Segment());
+    outerArray.get(0).set(0, new Segment(SEGMENT_SIZE));
     size = new AtomicInteger(1);
   }
 
@@ -72,8 +72,9 @@ public class SegmentTable {
     }
     // Bucket % segment size gives the proper position in the segment
     // where the dummy node should be inserted
-    seg.segment.set(bucket % SEGMENT_SIZE, dummyNode);
-    size.incrementAndGet();
+    if (seg.segment.compareAndSet(bucket % SEGMENT_SIZE, null, dummyNode)) {
+      size.incrementAndGet();
+    }
     return;
   }
 
