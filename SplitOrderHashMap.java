@@ -33,26 +33,44 @@ public class SplitOrderHashMap {
    * @param data The data of a node used to create the key.
    * @return the ordinary key of the data
    */
-  public static int makeOrdinaryKey(int data) {
+  public static int makeOrdinaryKey(int key) {
     Integer code;
-    code = data & 0x00FFFFFF;
+    code = key & 0x00FFFFFF;
     code = Integer.reverse(code);
     code |= 1;
     return code;
   }
 
   /**
-   * FOR TOSTRING()
+   * Returns true if the given key is an ordinary key (LSB is 1)
+   * @param key to check
+   * @return true if key is ordinary, false otherwise
+   */
+  public static boolean isOrdinaryKey(int key) {
+    return key & 1;
+  }
+
+  /**
+   * 
    * Generates a Key for a bucket / sentinel node.
    *
    * @param data The data of a node used to create the key.
    * @return the sentinel key of the data node.
    */
-  public static int makeSentinelKey(int data) {
+  public static int makeSentinelKey(int key) {
     Integer code;
-    code = data & 0x00FFFFFF;
+    code = key & 0x00FFFFFF;
     code = Integer.reverse(code);
     return code;
+  }
+
+    /**
+   * Returns true if the given key is a sentinel (dummy) key (LSB is 0)
+   * @param key to check
+   * @return true if key is sentinel (dummy), false otherwise
+   */
+  public static boolean isSentinelKey(int key) {
+    return !isOrdinaryKey(key);
   }
 
   /**
