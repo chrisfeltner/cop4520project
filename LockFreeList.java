@@ -1,5 +1,6 @@
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
+import java.lang.Integer;
 
 public class LockFreeList {
   Node head;
@@ -7,20 +8,12 @@ public class LockFreeList {
   Node curr;
 
   /**
-   * Create a new LockFreeList using the head of an existing LockFreeList.
+   * Create a new LockFreeList 
    *
-   * @param head      The head of an existing LockFreeList
-   * @param itemCount The number of items in an existing list
    */
-  public LockFreeList(Node head, int itemCount) {
-    this.head = head;
-    this.itemCount = new AtomicInteger(itemCount);
-    this.curr = head;
-  }
-
   public LockFreeList() {
-    this.head = null;
-    this.itemCount = new AtomicInteger(0);
+    this.head = new Node(0, new AtomicMarkableReference<Node>(null, false), true);
+    this.itemCount = new AtomicInteger(1);
     this.curr = head;
   }
 
@@ -28,216 +21,99 @@ public class LockFreeList {
    * Check if a key is in the list.
    *
    * @param keyToFind The value to find in the list
-   * @return true if key is in list
+   * @return Window containing the predecessor and current nodes
    */
-  public boolean find(int keyToFind) {
-    Node prev = this.head;
-    boolean[] markHolder = { false };
-    while (true) {
-      curr = prev.next.get(markHolder);
-      // Condition 1: We reach the end of the list without finding key
-      if (curr == null) {
-        return false;
-      }
-      Node next = curr.next.get(markHolder);
-      boolean currentMark = markHolder[0];
-      int currentKey = curr.key;
-      // Condition 2: The previous node is marked or is no longer the previous node
-      if (prev.next.get(markHolder) != curr || markHolder[0] == true) {
-        // Start over
-        find(keyToFind);
-      }
-      // The current node is not marked (not deleted)
-      if (!currentMark) {
-        if (currentKey >= keyToFind) {
-          return currentKey == keyToFind;
-        } else {
-          prev = curr.next.get(markHolder);
-        }
-      } else {
-        // The current node has been marked for deletion!
-        if (prev.next.compareAndSet(curr, next, false, false)) {
-          // Node will be garbage collected by Java runtime
-          deleteNode(curr);
-        } else {
-          // Deletion failed; try again
-          find(keyToFind);
-        }
-      }
-      prev = curr;
-    }
+  public Window find(int keyToFind) {
+    return findAfter(this.head, keyToFind);
   }
 
   /**
    * Check if a key is in the list.
    *
    * @param keyToFind The value to find in the list
-   * @return true if key is in list
+   * @return Window containing the predecessor and current nodes
    */
-  public boolean findAfter(Node head, int keyToFind) {
-    Node prev = head;
-    boolean[] markHolder = { false };
-    while (true) {
-      curr = prev.next.get(markHolder);
-      // Condition 1: We reach the end of the list without finding key
-      if (curr == null) {
-        return false;
+  public Window findAfter(Node head, int keyToFind) {
+    Node pred = null;
+    Node curr = null;
+    Node succ = null;
+    boolean[] marked = { false };
+    boolean snip;
+    retry: while (true) {
+      pred = head;
+      if (pred == null)
+      {
+        System.out.println("PRED IS NULL???????");
       }
-      Node next = curr.next.get(markHolder);
-      boolean currentMark = markHolder[0];
-      int currentKey = curr.key;
-      // Condition 2: The previous node is marked or is no longer the previous node
-      if (prev.next.get(markHolder) != curr || markHolder[0] == true) {
-        // Start over
-        findAfter(head, keyToFind);
-      }
-      // The current node is not marked (not deleted)
-      if (!currentMark) {
-        if (currentKey >= keyToFind) {
-          return currentKey == keyToFind;
-        } else {
-          prev = curr.next.get(markHolder);
+      curr = pred.next.getReference();
+      while (true) {
+        if (curr == null) {
+          return new Window(pred, curr);
         }
-      } else {
-        // The current node has been marked for deletion!
-        if (prev.next.compareAndSet(curr, next, false, false)) {
-          // Node will be garbage collected by Java runtime
-          deleteNode(curr);
-        } else {
-          // Deletion failed; try again
-          findAfter(head, keyToFind);
+        succ = curr.next.get(marked);
+        while (marked[0]) {
+          snip = pred.next.compareAndSet(curr, succ, false, false);
+          if (!snip) {
+            continue retry;
+          }
+          curr = succ;
+          succ = curr.next.get(marked);
         }
+        if (Integer.compareUnsigned(curr.key, keyToFind) >= 0) {
+          return new Window(pred, curr);
+        }
+        pred = curr;
+        curr = succ;
       }
-      prev = curr;
     }
+
   }
 
   /**
    * Insert a node after the head of the list.
    *
-   * @param nodeToInsert A new node with key set, but next reference null
-   * @return True if successfully inserted
+   * @param data the data to be inserted
+   * @return Node that was inserted
    */
-  public boolean insert(Node nodeToInsert) {
-    if (this.head == null) {
-      this.head = nodeToInsert;
-      this.curr = this.head;
-      return true;
-    }
-    int key = nodeToInsert.key;
-    // If the key is already in the set, there is no insertion needed
-    if (find(key)) {
-      return false;
-    }
-    // Set next reference for node
-    Node nextInList = this.head.next.getReference();
-    nodeToInsert.next = new AtomicMarkableReference<>(nextInList, false);
-    if (head.next.compareAndSet(nextInList, nodeToInsert, false, false)) {
-      // The head's next reference still points to nodeToInsert and head has not
-      // been marked for deletion. If the CAS operation returns true, head's next
-      // reference points to the inserted node
-      return true;
-    } else {
-      // Try again; We can assume that it is illegal to delete head
-      return insert(nodeToInsert);
-    }
+  public Node insert(int data) {
+    return insertAt(this.head, data, false);
   }
 
   /**
    * Insert a node after another node.
    *
-   * @param nodeToInsert The new node with next pointer null
-   * @param insertAfter  The node to insert nodeToInsert after
-   * @return True if successful
+   * @param head The head or shortcut in the list (where to start)
+   * @param data  The data to be inserted
+   * @param isDummy  Whether or not the node is a bucket
+   * @return Node that was inserted
    */
-  public boolean insertAt(Node nodeToInsert, Node insertAfter) {
-    if (this.head == null) {
-      this.head = nodeToInsert;
-      this.curr = this.head;
-      return true;
-    }
-    if (insertAfter == null)
-      return insert(nodeToInsert);
-    Node prev = null;
-    while (insertAfter != null && nodeToInsert.key < insertAfter.key) {
-      prev = insertAfter;
-      insertAfter = insertAfter.next.getReference();
-    }
-    if (insertAfter == null) {
-      insertAfter = prev;
-    }
-    int key = nodeToInsert.key;
-    // If the key is already in the set, there is no insertion needed
-    if (findAfter(insertAfter, key)) {
-      return false;
-    }
-    Node nextInList = insertAfter.next.getReference();
-    nodeToInsert.next = new AtomicMarkableReference<>(nextInList, false);
-    if (insertAfter.next.compareAndSet(nextInList, nodeToInsert, false, false)) {
-      // insertAfter's next reference still points to nodeToInsert and insertAfter has
-      // not
-      // been marked for deletion. If the CAS operation returns true, insertAfter's
-      // next
-      // reference points to the inserted node
-      return true;
-    } else {
-      // insertAfter may have been deleted from the list, so trying again will
-      // probably result in
-      // a stack overflow. We should allow the caller to handle the failure to insert.
-      return false;
+  public Node insertAt(Node head, int data, boolean isDummy) {
+    int key;
+    if (isDummy) key = makeSentinelKey(data);
+    else key = makeOrdinaryKey(data);
+
+    while (true) {
+      Window window = findAfter(head, key);
+      Node pred = window.pred, curr = window.curr;
+      if (curr != null && Integer.compareUnsigned(curr.key, key) == 0) {
+        return null;
+      } else {
+        Node node = new Node(data, new AtomicMarkableReference<Node>(curr, false), isDummy);
+        if (pred.next.compareAndSet(curr, node, false, false)) {
+          return node;
+        }
+      }
     }
   }
 
   /**
-   * Delete the node with specified key if it exists.
+   * Delete the node with specified data if it exists.
    *
-   * @param keyToDelete The key of the node we are trying to delete
-   * @return True if successful
+   * @param data The data of the node we are trying to delete
+   * @return Node of what we deleted
    */
-  public boolean delete(int keyToDelete) {
-    Node prev = this.head;
-    Node current;
-    Node succ;
-    boolean[] markHolder = { false };
-    while (true) {
-      // Perform the same traversal as find but stop once node to delete is found
-      while (true) {
-        current = prev.next.get(markHolder);
-        // Condition 1: We reach the end of the list without finding key
-        if (current == null) {
-          return false;
-        }
-        boolean currentMark = markHolder[0];
-        int currentKey = current.key;
-        // Condition 2: The previous node is marked or is no longer the previous node
-        if (prev.next.get(markHolder) != current || markHolder[0] == true) {
-          // Start over
-          delete(keyToDelete);
-        }
-        // The current node is not marked (not deleted)
-        if (!currentMark) {
-          if (currentKey == keyToDelete) {
-            break;
-          } else if (currentKey > keyToDelete) {
-            return false;
-          } else {
-            prev = current.next.get(markHolder);
-          }
-        }
-        prev = current;
-      }
-
-      succ = current.next.getReference();
-      // Try to perform logical deletion, if we can't then try again
-      if (!current.next.compareAndSet(succ, succ, false, true)) {
-        continue;
-      }
-      // Try to perform physical deletion, if we can't then find will
-      if (prev.next.compareAndSet(current, succ, false, false)) {
-        deleteNode(current);
-      }
-      return true;
-    }
+  public Node delete(int data) {
+    return deleteAfter(this.head, data);
   }
 
   /**
@@ -245,57 +121,55 @@ public class LockFreeList {
    * specified starting point (used for deletion from hash table using shortcut
    * references).
    *
-   * @param startingPoint Node reference where we will begin our traversal
-   * @param keyToDelete   The key of the node we are trying to delete
-   * @return True if successful
+   * @param head Node reference where we will begin our traversal
+   * @param data   The data of the node we are trying to delete
+   * @return Node that was deleted 
    */
-  public boolean deleteAfter(Node startingPoint, int keyToDelete) {
-    Node prev = startingPoint;
-    Node current;
-    Node succ;
-    boolean[] markHolder = { false };
+  public Node deleteAfter(Node head, int data) {
+    int key = makeOrdinaryKey(data);
+    boolean snip;
     while (true) {
-      // Perform the same traversal as find but stop once node to delete is found
-      while (true) {
-        current = prev.next.get(markHolder);
-        // Condition 1: We reach the end of the list without finding key
-        if (current == null) {
-          return false;
+      Window window = findAfter(head, key);
+      Node pred = window.pred, curr = window.curr;
+      if (Integer.compareUnsigned(curr.key, key) != 0) {
+        return null;
+      } else {
+        Node succ = curr.next.getReference();
+        snip = curr.next.compareAndSet(succ, succ, false, true);
+        if (!snip) {
+          continue;
         }
-        boolean currentMark = markHolder[0];
-        int currentKey = current.key;
-        // Condition 2: The previous node is marked or is no longer the previous node
-        if (prev.next.get(markHolder) != current || markHolder[0] == true) {
-          // Start over
-          delete(keyToDelete);
-        }
-        // The current node is not marked (not deleted)
-        if (!currentMark) {
-          if (currentKey == keyToDelete) {
-            break;
-          } else if (currentKey > keyToDelete) {
-            return false;
-          } else {
-            prev = current.next.get(markHolder);
-          }
-        }
-        prev = current;
+        pred.next.compareAndSet(curr, succ, false, false);
+        return curr;
       }
-
-      succ = current.next.getReference();
-      if (!current.next.compareAndSet(succ, succ, false, true)) {
-        continue;
-      }
-      if (prev.next.compareAndSet(current, succ, false, false)) {
-        deleteNode(current);
-      }
-      return true;
     }
   }
 
-  private void deleteNode(Node node) {
-    node.key = 0;
-    node.next = null;
+  /**
+   * Generates a Key for a non-bucket / sentinel node.
+   * 
+   * @param data The data of a node used to create the key.
+   * @return the key of a non-bucket node.
+   */
+  public static int makeOrdinaryKey(int data) {
+    Integer code = data & 0x00FFFFFF;
+    code = Integer.reverse(code);
+    code |= 1;
+    // System.out.println(Integer.toUnsignedString​(code));
+    return code;
+  }
+
+  /**
+   * Generates a Key for a bucket / sentinel node.
+   * 
+   * @param data The data of a node used to create the key.
+   * @return the sentinel key for the data.
+   */
+  public static int makeSentinelKey(int data) {
+    Integer code = data & 0x00FFFFFF;
+    code = Integer.reverse(code);
+    // System.out.println(Integer.toUnsignedString​(code));
+    return code;
   }
 
   /**
@@ -305,7 +179,7 @@ public class LockFreeList {
     Node current = this.head;
     String string = "";
     while (current != null) {
-      string += current.toString() + " -> ";
+      string += current.toString() + " " + Integer.toUnsignedString(current.key) + " " + " -> ";
       current = current.next.getReference();
     }
     string += "NULL";

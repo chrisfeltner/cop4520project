@@ -1,11 +1,10 @@
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-
 public class SplitOrderHashMap {
-  final double MAX_LOAD = .9;
-
+  final double MAX_LOAD = 2;
+  final static int THRESHHOLD = 10;
   AtomicInteger itemCount;
-  AtomicInteger size;
+  AtomicInteger numBuckets;
   // underlying LockFreeList
   LockFreeList lockFreeList;
 
@@ -15,177 +14,181 @@ public class SplitOrderHashMap {
   /**
    * Create a Split Ordered hash with initial Node.
    *
-   * @param head      The head of an existing LockFreeList (Node)
-   * @param itemCount The number of items in an existing list
-   */
-  public SplitOrderHashMap(Node head, int itemCount) {
-    this.lockFreeList = new LockFreeList(head, itemCount);
-    this.itemCount = new AtomicInteger(0);
-    this.size = new AtomicInteger(2);
-
-    // init buckets with Null (UNINITIALIZED)
-    this.buckets = new ArrayList<Node>(9);
-    for (int i = 0; i < this.size.intValue(); i++) {
-      this.buckets.add(null);
-    }
-    initialize_bucket(0);
-  }
-
-  /**
-   * Create a Split Ordered hash from scratch.
    */
   public SplitOrderHashMap() {
-    this.lockFreeList = new LockFreeList();
+    // size of bucket list
+    this.numBuckets = new AtomicInteger(1);
+    this.buckets = new ArrayList<Node>(numBuckets.intValue());
+    this.buckets.add(null);
+    // Node head = new Node(0, 0, 1);
+    // num items in hash map
     this.itemCount = new AtomicInteger(0);
-    this.size = new AtomicInteger(2);
-    this.buckets = new ArrayList<Node>(2);
-    for (int i = 0; i < this.size.intValue(); i++) {
-      this.buckets.add(null);
-    }
-    // initialize the 0th bucket to a reference to "0" key at beginning.
-    // is it alright if this is 0
-    initialize_bucket(0);
+
+    this.lockFreeList = new LockFreeList();
+    this.buckets.set(0, this.lockFreeList.head);
   }
 
   /**
    * Generates a Key for a non-bucket / sentinel node.
-   * 
+   *
    * @param data The data of a node used to create the key.
+   * @return the ordinary key of the data
    */
   public static int makeOrdinaryKey(int data) {
-    Integer code = data & 0x00FFFFFF;
+    Integer code;
+    code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
     code |= 1;
     return code;
   }
 
   /**
+   * FOR TOSTRING()
    * Generates a Key for a bucket / sentinel node.
-   * 
+   *
    * @param data The data of a node used to create the key.
+   * @return the sentinel key of the data node.
    */
   public static int makeSentinelKey(int data) {
-    Integer code = data & 0x00FFFFFF;
+    Integer code;
+    code = data & 0x00FFFFFF;
     code = Integer.reverse(code);
     return code;
   }
 
+  /**
+   * @return num items in hash map.
+   */
   public int num_items() {
     return this.itemCount.intValue();
   }
 
-  public int size() {
-    return this.size.intValue();
+  /**
+   * @return num buckets in hash map.
+   */
+  public int numBuckets() {
+    return this.numBuckets.intValue();
+  }
+  
+  /**
+   * Gets the parent of a given bucket.
+   * * @param myBucket The bucket whose parent will be gotten
+   * @return the index of the parent bucket
+   */
+  private int getParent(int myBucket) {
+    int parent = numBuckets();
+    do {
+      parent = parent >> 1;
+    } while (parent > myBucket);
+    parent = myBucket - parent;
+    return parent;
   }
 
-  private int getParent(int bucket_num) {
-    return bucket_num % size();
-  }
+
 
   /**
    * Used Internally by insert() and constructors.
+   * @param bucket the bucket to initialize
    */
   private void initialize_bucket(int bucket) {
     // this would be binary
-    int bucketKey = makeSentinelKey(bucket);
-    int parent;
-    if (bucket > size()) {
-      parent = getParent(bucketKey);
-    } else {
-      parent = bucket;
+    // int bucketKey = makeSentinelKey(bucket);
+    int parent = getParent(bucket);
+    if (this.buckets.get(parent) == null)
+    {
+      System.out.println("PARENTS does not exist so we're initialize parent: \t" + parent);
+      initialize_bucket(parent);
     }
 
-    // make this bits
-    int parentKey = makeSentinelKey(parent);
+    Node result = this.lockFreeList.insertAt(this.buckets.get(parent), bucket , true);
 
-    Node dummy = new Node(bucketKey, 1);
-    // if insert doesn't fail, dummy node with parent key now in list.
-    // node to insert / insert after
-    if (!this.lockFreeList.insertAt(dummy, this.buckets.get(parentKey))) {
-      // does this violate our linearizability??? if another thread calls find()
-      // delete dummy if insert failed. reset with curr from the find operation in
-      // insert call
-      dummy = this.lockFreeList.curr;
-      dummy.dummy = true;
+    if (result != null)
+    {
+      // finally, init bucket with dummy node
+      this.buckets.set(bucket, result);
     }
 
-    // finally, init bucket with dummy node
-    this.buckets.set(bucketKey, dummy);
-
-    // pseudocode get parent macro that unsets buckets most sig, turned on bit. if
-    // exact
-    // dummy node already exists in list, maybe another process already tried to
-    // initialize same bucket
-    // in this case, fail and p
-
-    // parent = GET_PARENT(bucket)
   }
 
-  public int find(int key) {
-    int bucket = key % size();
-    Node bucketIndex = this.buckets.get(bucket);
-    if (bucketIndex == null) {
+   /**
+   * Try to find a certain data in the map
+   * @param data the data to find
+   * @return whether the data was found in the map
+   */
+  public boolean find(int data) {
+    int bucketIndex = data % numBuckets();
+    Node bucket = this.buckets.get(bucketIndex);
+    if (bucket == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
-      initialize_bucket(bucket);
+      initialize_bucket(bucketIndex);
+      bucket = this.buckets.get(bucketIndex);
     }
 
     // TODO: need a findAt() function
-    if (this.lockFreeList.find(key))
-      return 1;
+    Window window = this.lockFreeList.findAfter(bucket, makeOrdinaryKey(data));
+    Node pred = window.pred, curr = window.curr;
+    if (curr != null && curr.data == data)
+      return true;
     else
-      return 0;
-
+      return false;
   }
-
-  public int delete(int key) {
-
-    int bucket = key % size();
-    Node bucketIndex = this.buckets.get(bucket);
-    if (bucketIndex == null) {
+  
+  /**
+   * Try to delete a certain data in the map
+   * @param data the data to delete
+   * @return whether or not the data was deleted in the map
+   */
+  public boolean delete(int data) {
+    int bucketIndex = data % numBuckets();
+    Node bucket = this.buckets.get(bucketIndex);
+    if (bucket == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
-      initialize_bucket(bucket);
+      initialize_bucket(bucketIndex);
     }
 
-    if (!this.lockFreeList.deleteAfter(this.buckets.get(bucket), key)) {
-      return 0;
+    Node result = this.lockFreeList.deleteAfter(this.buckets.get(bucketIndex), data);
+    if (result == null) {
+      return false;
     }
-
     this.itemCount.getAndDecrement();
-
-    return 1;
-
-  }
-
-  public int insert(int key) {
-    // this key will be binary eventually
-    Node newNode = new Node(key); // next is null
-
-    int bucket = key % size();
-
-    if (this.buckets.get(bucket) == null) {
-      initialize_bucket(bucket);
-    }
-
-    // fail to insertAt into the lockFreeList, return 0
-    if (!this.lockFreeList.insertAt(newNode, this.buckets.get(bucket))) {
-      // delete node
-      return 0;
-    }
-
-    int csize = size();
-    if ((double) (this.itemCount.getAndIncrement() / csize) > MAX_LOAD) {
-      this.size.compareAndSet(csize, 2 * csize);
-      // double size of array list add nulls
-      // TODO: how does this resizing work with binary???
-      for (int i = 0; i < csize; i++) {
-        this.buckets.add(null);
-      }
-    }
-    return 1;
+    return true;
   }
 
   /**
-   * Returns a string representation of the map.
+   * Try to insert a certain data in the map
+   * @param data the data to insert
+   * @return whether or not the data was inserted in the map
+   */
+  public boolean insert(int data) {
+    int bucketIndex = data % numBuckets();
+
+    if (this.buckets.get(bucketIndex) == null) {
+      initialize_bucket(bucketIndex);
+    }
+
+    // fail to insertAt into the lockFreeList, return 0
+    Node result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), data, false);
+    if (result == null) {
+      //System.out.println("Could NOT insert " + data);
+      // delete node
+      return false;
+    }
+
+    int localNumBuckets = numBuckets();
+    if ((double) (this.itemCount.incrementAndGet() / localNumBuckets) >= MAX_LOAD) {
+      // System.out.println("EXPANDING");
+      this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
+      // double size of array list add nulls
+      // TODO: how does this resizing work with binary???
+      for (int i = localNumBuckets; i < 2*localNumBuckets; i++) {
+        this.buckets.add(null);
+      }
+    }
+    return true;
+  }
+
+  /**
+   * @return a string representation of the map.
    */
   public String toString() {
     String s = "======================================================\nBUCKETS: \n";
