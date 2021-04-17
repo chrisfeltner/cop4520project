@@ -1,6 +1,6 @@
+import java.lang.Integer;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
-import java.lang.Integer;
 
 public class LockFreeList {
   Node head;
@@ -8,7 +8,7 @@ public class LockFreeList {
   Node curr;
 
   /**
-   * Create a new LockFreeList 
+   * Create a new LockFreeList.
    *
    */
   public LockFreeList() {
@@ -41,8 +41,7 @@ public class LockFreeList {
     boolean snip;
     retry: while (true) {
       pred = head;
-      if (pred == null)
-      {
+      if (pred == null) {
         System.out.println("PRED IS NULL???????");
       }
       curr = pred.next.getReference();
@@ -82,19 +81,23 @@ public class LockFreeList {
   /**
    * Insert a node after another node.
    *
-   * @param head The head or shortcut in the list (where to start)
-   * @param data  The data to be inserted
-   * @param isDummy  Whether or not the node is a bucket
+   * @param head    The head or shortcut in the list (where to start)
+   * @param data    The data to be inserted
+   * @param isDummy Whether or not the node is a bucket
    * @return Node that was inserted
    */
   public Node insertAt(Node head, int data, boolean isDummy) {
     int key;
-    if (isDummy) key = makeSentinelKey(data);
-    else key = makeOrdinaryKey(data);
+    if (isDummy) {
+      key = makeSentinelKey(data);
+    } else {
+      key = makeOrdinaryKey(data);
+    }
 
     while (true) {
       Window window = findAfter(head, key);
-      Node pred = window.pred, curr = window.curr;
+      Node pred = window.pred;
+      Node curr = window.curr;
       if (curr != null && Integer.compareUnsigned(curr.key, key) == 0) {
         return null;
       } else {
@@ -122,15 +125,16 @@ public class LockFreeList {
    * references).
    *
    * @param head Node reference where we will begin our traversal
-   * @param data   The data of the node we are trying to delete
-   * @return Node that was deleted 
+   * @param data The data of the node we are trying to delete
+   * @return Node that was deleted
    */
   public Node deleteAfter(Node head, int data) {
     int key = makeOrdinaryKey(data);
     boolean snip;
     while (true) {
       Window window = findAfter(head, key);
-      Node pred = window.pred, curr = window.curr;
+      Node pred = window.pred;
+      Node curr = window.curr;
       if (Integer.compareUnsigned(curr.key, key) != 0) {
         return null;
       } else {

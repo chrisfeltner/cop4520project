@@ -1,4 +1,5 @@
 import java.util.concurrent.atomic.AtomicInteger;
+
 public class SplitOrderHashMap {
   final double MAX_LOAD = 2;
   final static int THRESHHOLD = 10;
@@ -43,6 +44,7 @@ public class SplitOrderHashMap {
 
   /**
    * Returns true if the given key is an ordinary key (LSB is 1)
+   * 
    * @param key to check
    * @return true if key is ordinary, false otherwise
    */
@@ -64,8 +66,9 @@ public class SplitOrderHashMap {
     return code;
   }
 
-    /**
+  /**
    * Returns true if the given key is a sentinel (dummy) key (LSB is 0)
+   * 
    * @param key to check
    * @return true if key is sentinel (dummy), false otherwise
    */
@@ -86,10 +89,11 @@ public class SplitOrderHashMap {
   public int numBuckets() {
     return this.numBuckets.intValue();
   }
-  
+
   /**
-   * Gets the parent of a given bucket.
-   * * @param myBucket The bucket whose parent will be gotten
+   * Gets the parent of a given bucket. * @param myBucket The bucket whose parent
+   * will be gotten
+   * 
    * @return the index of the parent bucket
    */
   private int getParent(int myBucket) {
@@ -101,34 +105,31 @@ public class SplitOrderHashMap {
     return parent;
   }
 
-
-
   /**
    * Used Internally by insert() and constructors.
+   * 
    * @param bucket the bucket to initialize
    */
   private void initialize_bucket(int bucket) {
     // this would be binary
     // int bucketKey = makeSentinelKey(bucket);
     int parent = getParent(bucket);
-    if (this.buckets.get(parent) == null)
-    {
+    if (this.buckets.get(parent) == null) {
       System.out.println("PARENTS does not exist so we're initialize parent: \t" + parent);
       initialize_bucket(parent);
     }
 
-    Node result = this.lockFreeList.insertAt(this.buckets.get(parent), bucket , true);
+    Node result = this.lockFreeList.insertAt(this.buckets.get(parent), bucket, true);
 
-    if (result != null)
-    {
+    if (result != null) {
       // finally, init bucket with dummy node
       this.buckets.set(bucket, result);
     }
-
   }
 
-   /**
-   * Try to find a certain data in the map
+  /**
+   * Try to find a certain data in the map.
+   * 
    * @param data the data to find
    * @return whether the data was found in the map
    */
@@ -149,9 +150,10 @@ public class SplitOrderHashMap {
     else
       return false;
   }
-  
+
   /**
    * Try to delete a certain data in the map
+   * 
    * @param data the data to delete
    * @return whether or not the data was deleted in the map
    */
@@ -173,6 +175,7 @@ public class SplitOrderHashMap {
 
   /**
    * Try to insert a certain data in the map
+   * 
    * @param data the data to insert
    * @return whether or not the data was inserted in the map
    */
@@ -186,7 +189,7 @@ public class SplitOrderHashMap {
     // fail to insertAt into the lockFreeList, return 0
     Node result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), data, false);
     if (result == null) {
-      //System.out.println("Could NOT insert " + data);
+      // System.out.println("Could NOT insert " + data);
       // delete node
       return false;
     }
@@ -194,11 +197,6 @@ public class SplitOrderHashMap {
     int localNumBuckets = numBuckets();
     if ((double) (this.itemCount.incrementAndGet() / localNumBuckets) >= MAX_LOAD) {
       this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
-      // double size of array list add nulls
-      // TODO: how does this resizing work with binary???
-      // for (int i = localNumBuckets; i < 2*localNumBuckets; i++) {
-      //   this.buckets.add(null);
-      // }
     }
     return true;
   }
@@ -208,36 +206,19 @@ public class SplitOrderHashMap {
    */
   public String toString() {
     String s = "======================================================\nBUCKETS: \n";
-    // int i = 0;
-    // for (Node bucket : buckets) {
-    //   String b;
-    //   if (bucket == null) {
-    //     b = "null";
-    //   } else {
-    //     b = bucket.toString();
-    //   }
-    //   s = s.concat("bucket" + i + ": " + b + "\n");
-    //   i += 1;
-    // }
     final int out = SegmentTable.OUTER_SIZE;
     final int in = SegmentTable.MIDDLE_SIZE;
     final int segSize = SegmentTable.SEGMENT_SIZE;
     // Loop through all active segments in order to print the segment table
-    for (int i = 0; i < out; i++)
-    {
-      if (this.buckets.outerArray.get(i) != null)
-      {
+    for (int i = 0; i < out; i++) {
+      if (this.buckets.outerArray.get(i) != null) {
         s = s.concat("outer array position : " + i + "\n");
-        for (int j = 0; j < in; j++)
-        {
-          if (this.buckets.outerArray.get(i).get(j) != null)
-          {
+        for (int j = 0; j < in; j++) {
+          if (this.buckets.outerArray.get(i).get(j) != null) {
             s = s.concat("\tinner array position : " + j + "\n");
-            for (int k = 0; k < segSize; k++)
-            {
+            for (int k = 0; k < segSize; k++) {
               Node node = this.buckets.outerArray.get(i).get(j).segment.get(k);
-              if (node != null)
-              {
+              if (node != null) {
                 s = s.concat("\t\tsegment position : " + k + " " + node.toString() + " \n");
               }
             }
