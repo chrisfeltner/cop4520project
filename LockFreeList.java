@@ -1,6 +1,6 @@
+import java.lang.Integer;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
-import java.lang.Integer;
 
 public class LockFreeList {
   Node head;
@@ -8,7 +8,7 @@ public class LockFreeList {
   Node curr;
 
   /**
-   * Create a new LockFreeList
+   * Create a new LockFreeList.
    *
    */
   public LockFreeList() {
@@ -88,14 +88,16 @@ public class LockFreeList {
    */
   public Node insertAt(Node head, int data, boolean isDummy) {
     int key;
-    if (isDummy)
+    if (isDummy) {
       key = makeSentinelKey(data);
-    else
+    } else {
       key = makeOrdinaryKey(data);
+    }
 
     while (true) {
       Window window = findAfter(head, key);
-      Node pred = window.pred, curr = window.curr;
+      Node pred = window.pred;
+      Node curr = window.curr;
       if (curr != null && Integer.compareUnsigned(curr.key, key) == 0) {
         return null;
       } else {
@@ -131,7 +133,8 @@ public class LockFreeList {
     boolean snip;
     while (true) {
       Window window = findAfter(head, key);
-      Node pred = window.pred, curr = window.curr;
+      Node pred = window.pred;
+      Node curr = window.curr;
       if (Integer.compareUnsigned(curr.key, key) != 0) {
         return null;
       } else {
@@ -180,7 +183,7 @@ public class LockFreeList {
     Node current = this.head;
     String string = "";
     while (current != null) {
-      string += current.toString() + " " + Integer.toUnsignedString(current.key) + " " + " -> ";
+      string += current.toString() + " -> ";
       current = current.next.getReference();
     }
     string += "NULL";

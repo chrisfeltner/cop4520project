@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SplitOrderHashMap {
@@ -10,7 +9,7 @@ public class SplitOrderHashMap {
   LockFreeList lockFreeList;
 
   // dynamically sized buckets array
-  ArrayList<Node> buckets;
+  SegmentTable buckets;
 
   /**
    * Create a Split Ordered hash with initial Node.
@@ -19,8 +18,8 @@ public class SplitOrderHashMap {
   public SplitOrderHashMap() {
     // size of bucket list
     this.numBuckets = new AtomicInteger(1);
-    this.buckets = new ArrayList<Node>(numBuckets.intValue());
-    this.buckets.add(null);
+    this.buckets = new SegmentTable();
+    // this.buckets.add(null);
     // Node head = new Node(0, 0, 1);
     // num items in hash map
     this.itemCount = new AtomicInteger(0);
@@ -105,11 +104,10 @@ public class SplitOrderHashMap {
       // finally, init bucket with dummy node
       this.buckets.set(bucket, result);
     }
-
   }
 
   /**
-   * Try to find a certain data in the map
+   * Try to find a certain data in the map.
    * 
    * @param data the data to find
    * @return whether the data was found in the map
@@ -177,13 +175,7 @@ public class SplitOrderHashMap {
 
     int localNumBuckets = numBuckets();
     if ((double) (this.itemCount.incrementAndGet() / localNumBuckets) >= MAX_LOAD) {
-      // System.out.println("EXPANDING");
       this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
-      // double size of array list add nulls
-      // TODO: how does this resizing work with binary???
-      for (int i = localNumBuckets; i < 2 * localNumBuckets; i++) {
-        this.buckets.add(null);
-      }
     }
     return true;
   }
@@ -193,16 +185,25 @@ public class SplitOrderHashMap {
    */
   public String toString() {
     String s = "======================================================\nBUCKETS: \n";
-    int i = 0;
-    for (Node bucket : buckets) {
-      String b;
-      if (bucket == null) {
-        b = "null";
-      } else {
-        b = bucket.toString();
+    final int out = SegmentTable.OUTER_SIZE;
+    final int in = SegmentTable.MIDDLE_SIZE;
+    final int segSize = SegmentTable.SEGMENT_SIZE;
+    // Loop through all active segments in order to print the segment table
+    for (int i = 0; i < out; i++) {
+      if (this.buckets.outerArray.get(i) != null) {
+        s = s.concat("outer array position : " + i + "\n");
+        for (int j = 0; j < in; j++) {
+          if (this.buckets.outerArray.get(i).get(j) != null) {
+            s = s.concat("\tinner array position : " + j + "\n");
+            for (int k = 0; k < segSize; k++) {
+              Node node = this.buckets.outerArray.get(i).get(j).segment.get(k);
+              if (node != null) {
+                s = s.concat("\t\tsegment position : " + k + " " + node.toString() + " \n");
+              }
+            }
+          }
+        }
       }
-      s = s.concat("bucket" + i + ": " + b + "\n");
-      i += 1;
     }
     return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
   }
