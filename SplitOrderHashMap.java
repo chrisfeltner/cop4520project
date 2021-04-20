@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 public class SplitOrderHashMap {
   final double MAX_LOAD = 2;
   final double MIN_LOAD = 0.5;
+  final boolean CONTRACT = false;
   AtomicInteger itemCount;
   AtomicInteger numBuckets;
   // underlying LockFreeList
@@ -137,7 +138,9 @@ public class SplitOrderHashMap {
    * @return whether the data was found in the map
    */
   public boolean find(int data) {
-    removeUselessDummy();
+    if (CONTRACT) {
+      removeUselessDummy();
+    }
     int bucketIndex = data % numBuckets();
     Node bucket = this.buckets.get(bucketIndex);
     if (bucket == null) {
@@ -162,7 +165,9 @@ public class SplitOrderHashMap {
    * @return whether or not the data was deleted in the map
    */
   public boolean delete(int data) {
-    removeUselessDummy();
+    if (CONTRACT) {
+      removeUselessDummy();
+    }
     int bucketIndex = data % numBuckets();
     Node bucket = this.buckets.get(bucketIndex);
     if (bucket == null) {
@@ -176,8 +181,11 @@ public class SplitOrderHashMap {
     }
     int localNumBuckets = numBuckets();
     if ((double) (this.itemCount.decrementAndGet() / localNumBuckets) < MIN_LOAD) {
-      System.out.println("Contracting");
-      this.buckets.contract();
+      if (CONTRACT) {
+        System.out.println("Contracting");
+        this.buckets.contract();
+      }
+
     }
     return true;
   }
@@ -189,7 +197,9 @@ public class SplitOrderHashMap {
    * @return whether or not the data was inserted in the map
    */
   public boolean insert(int data) {
-    removeUselessDummy();
+    if (CONTRACT) {
+      removeUselessDummy();
+    }
     // System.out.println("Inserting " + data);
     int bucketIndex = data % numBuckets();
 
