@@ -94,6 +94,7 @@ public class LockFreeList<T> {
       if (curr != null && Integer.compareUnsigned(curr.key, toInsert.key) == 0) {
         return null;
       } else {
+        toInsert.next.set(curr, false);
         if (pred.next.compareAndSet(curr, toInsert, false, false)) {
           return toInsert;
         }
