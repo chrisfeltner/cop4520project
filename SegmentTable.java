@@ -118,19 +118,22 @@ public class SegmentTable<T> {
       AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> newOuterArray = new AtomicReferenceArray<AtomicReferenceArray<Segment<T>>>(
           outerArraySize);
       AtomicReferenceArray<Segment<T>> newInnerArray = new AtomicReferenceArray<Segment<T>>(MIDDLE_SIZE);
-      Segment<T> newSegment = new Segment(SEGMENT_SIZE);
+      Segment<T> newSegment = new Segment<T>(SEGMENT_SIZE);
       if (newSize % MIDDLE_SIZE == 0) {
         for (int i = 0; i < outerArraySize; i++) {
+          // System.out.println("Copy " + i + " outer array");
           newOuterArray.set(i, outerArray.get(i));
         }
       } else {
         if (newSize % SEGMENT_SIZE == 0) {
           for (int i = 0; i < newSize / SEGMENT_SIZE; i++) {
+            // System.out.println("Copy " + i + " inner array");
             newInnerArray.set(i, outerArray.get(0).get(i));
           }
           newOuterArray.set(0, newInnerArray);
         } else {
           for (int i = 0; i < newSize; i++) {
+            // System.out.println("Copy " + i + " segment position");
             newSegment.segment.set(i, outerArray.get(0).get(0).segment.get(i));
           }
           newInnerArray.set(0, newSegment);
@@ -143,7 +146,7 @@ public class SegmentTable<T> {
       boolean isNewTableSet = this.currentTable.compareAndSet(outerArray, newOuterArray, originalSize[0], newSize);
 
       if (isOldTableSet) {
-        this.oldTableCounter.set(originalSize[0]);
+        this.oldTableCounter.set(originalSize[0] - 1);
       }
 
       return isNewTableSet;
@@ -197,7 +200,23 @@ public class SegmentTable<T> {
     int innerIndex = getInnerIndex(bucket, outerIndex);
     int segmentIndex = getSegmentIndex(bucket, outerIndex);
 
-    Node<T> dummy = this.oldTable.getReference().get(outerIndex).get(innerIndex).segment.get(segmentIndex);
+    Node<T> dummy = null;
+    AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = this.oldTable.getReference();
+    if (outerArray != null) {
+      AtomicReferenceArray<Segment<T>> innerArray = outerArray.get(outerIndex);
+      if (innerArray != null) {
+        Segment<T> segment = innerArray.get(innerIndex);
+        if (segment != null) {
+          dummy = segment.segment.get(segmentIndex);
+        } else {
+          System.out.println("Segment at innerIndex" + innerIndex + " is null");
+        }
+      } else {
+        System.out.println("InnerArray is null");
+      }
+    } else {
+      System.out.println("OuterArray is null");
+    }
     if (dummy != null) {
       return dummy;
     }
@@ -218,7 +237,6 @@ public class SegmentTable<T> {
         return getDummy(key);
       } else {
         this.oldTableCounter.set(-1);
-        this.oldTable.set(null, 0);
         return null;
       }
     }

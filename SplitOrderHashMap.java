@@ -3,7 +3,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SplitOrderHashMap<T> {
   final double MAX_LOAD = 2;
   final double MIN_LOAD = 0.5;
-  final boolean CONTRACT = false;
+  final boolean CONTRACT = true;
   AtomicInteger itemCount;
   AtomicInteger numBuckets;
   // underlying LockFreeList
@@ -153,7 +153,7 @@ public class SplitOrderHashMap<T> {
     int localNumBuckets = numBuckets();
     if ((double) (this.itemCount.decrementAndGet() / localNumBuckets) < MIN_LOAD) {
       if (CONTRACT) {
-        System.out.println("Contracting");
+        // System.out.println("Contracting");
         this.buckets.contract();
       }
 
@@ -203,8 +203,8 @@ public class SplitOrderHashMap<T> {
     for (int i = 0; i < 2; i++) {
       Node<T> dummy = buckets.getUselessDummy();
       if (dummy != null) {
-        System.out.println("Removing " + dummy.key);
-        int parent = buckets.getOldParent(dummy.key);
+        // System.out.println("Removing " + dummy.bucket);
+        int parent = buckets.getOldParent(dummy.bucket);
         Node<T> parentNode = this.buckets.get(parent);
         while (parentNode == null) {
           parent = buckets.getOldParent(parent);

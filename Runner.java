@@ -34,16 +34,15 @@ public class Runner {
 
     System.out.println("Testing SplitOrderedHashMap");
     SplitOrderHashMap<Integer> hashmap = new SplitOrderHashMap<Integer>();
-    System.out.println(hashmap);
+    // System.out.println(hashmap);
     // int[] bag = new int[]{ 0,1,2,4};
-    for (int i = 0; i <= 5; i++) {
+    for (int i = 0; i <= 2000; i++) {
       hashmap.insert(i);
-      System.out.println(hashmap);
+      // System.out.println(hashmap);
     }
-    for (int i = 0; i <= 5; i++) {
+    for (int i = 0; i <= 2000; i++) {
       hashmap.delete(i);
-      System.out.println(hashmap);
-
+      // System.out.println(hashmap);
     }
 
     // hashmap.insert(1);
