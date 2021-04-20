@@ -59,7 +59,7 @@ public class Tests {
 
     // check the traversal is as expected
     Node<Integer> current1 = map1.lockFreeList.head;
-    assertEquals(Integer.valueOf(0), current1.data);
+    assertEquals(0, current1.bucket);
     assertEquals(true, current1.dummy);
     current1 = current1.next.getReference();
 
@@ -71,7 +71,7 @@ public class Tests {
     assertEquals(false, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(Integer.valueOf(1), current1.data);
+    assertEquals(1, current1.bucket);
     assertEquals(true, current1.dummy);
     current1 = current1.next.getReference();
 
@@ -94,7 +94,7 @@ public class Tests {
 
     // check the traversal is as expected
     Node<Integer> current2 = map2.lockFreeList.head;
-    assertEquals(Integer.valueOf(0), current2.data);
+    assertEquals(0, current2.bucket);
     assertEquals(true, current2.dummy);
     current2 = current2.next.getReference();
 
@@ -106,7 +106,7 @@ public class Tests {
     assertEquals(false, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(Integer.valueOf(1), current2.data);
+    assertEquals(1, current2.bucket);
     assertEquals(true, current2.dummy);
     current2 = current2.next.getReference();
 
@@ -129,7 +129,7 @@ public class Tests {
 
     // check the traversal is as expected
     Node<Integer> current3 = map3.lockFreeList.head;
-    assertEquals(Integer.valueOf(0), current3.data);
+    assertEquals(0, current3.bucket);
     assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
 
@@ -141,7 +141,7 @@ public class Tests {
     assertEquals(false, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(Integer.valueOf(1), current3.data);
+    assertEquals(1, current3.bucket);
     assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
 
@@ -166,7 +166,7 @@ public class Tests {
 
     // check the traversal is as expected
     Node<Integer> current4 = map4.lockFreeList.head;
-    assertEquals(Integer.valueOf(0), current4.data);
+    assertEquals(0, current4.bucket);
     assertEquals(true, current4.dummy);
     current4 = current4.next.getReference();
 
@@ -178,7 +178,7 @@ public class Tests {
     assertEquals(false, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(Integer.valueOf(1), current4.data);
+    assertEquals(1, current4.bucket);
     assertEquals(true, current4.dummy);
     current4 = current4.next.getReference();
 
@@ -203,7 +203,7 @@ public class Tests {
 
     // check the traversal is as expected
     Node<Integer> current1 = map1.lockFreeList.head;
-    assertEquals(Integer.valueOf(0), current1.data);
+    assertEquals(0, current1.bucket);
     assertEquals(true, current1.dummy);
     current1 = current1.next.getReference();
 
@@ -211,7 +211,7 @@ public class Tests {
     assertEquals(false, current1.dummy);
     current1 = current1.next.getReference();
 
-    assertEquals(Integer.valueOf(1), current1.data);
+    assertEquals(1, current1.bucket);
     assertEquals(true, current1.dummy);
     current1 = current1.next.getReference();
 
@@ -237,7 +237,7 @@ public class Tests {
 
     // check the traversal is as expected
     Node<Integer> current2 = map2.lockFreeList.head;
-    assertEquals(Integer.valueOf(0), current2.data);
+    assertEquals(0, current2.bucket);
     assertEquals(true, current2.dummy);
     current2 = current2.next.getReference();
 
@@ -245,7 +245,7 @@ public class Tests {
     assertEquals(false, current2.dummy);
     current2 = current2.next.getReference();
 
-    assertEquals(Integer.valueOf(1), current2.data);
+    assertEquals(1, current2.bucket);
     assertEquals(true, current2.dummy);
     current2 = current2.next.getReference();
 
@@ -269,19 +269,19 @@ public class Tests {
 
     // check the traversal is as expected
     Node<Integer> current3 = map3.lockFreeList.head;
-    assertEquals(Integer.valueOf(0), current3.data);
+    assertEquals(0, current3.bucket);
     assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(Integer.valueOf(2), current3.data);
+    assertEquals(2, current3.bucket);
     assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(Integer.valueOf(1), current3.data);
+    assertEquals(1, current3.bucket);
     assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
 
-    assertEquals(Integer.valueOf(3), current3.data);
+    assertEquals(3, current3.bucket);
     assertEquals(true, current3.dummy);
     current3 = current3.next.getReference();
   }
@@ -302,7 +302,7 @@ public class Tests {
 
     // check the traversal is as expected
     Node<Integer> current4 = map4.lockFreeList.head;
-    assertEquals(Integer.valueOf(0), current4.data);
+    assertEquals(0, current4.bucket);
     assertEquals(true, current4.dummy);
     current4 = current4.next.getReference();
 
@@ -310,11 +310,11 @@ public class Tests {
     assertEquals(false, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(Integer.valueOf(2), current4.data);
+    assertEquals(2, current4.bucket);
     assertEquals(true, current4.dummy);
     current4 = current4.next.getReference();
 
-    assertEquals(Integer.valueOf(1), current4.data);
+    assertEquals(1, current4.bucket);
     assertEquals(true, current4.dummy);
     current4 = current4.next.getReference();
 
