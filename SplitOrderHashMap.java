@@ -1,8 +1,9 @@
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class SplitOrderHashMap {
-  final double MAX_LOAD = 2;
-  final static int THRESHHOLD = 10;
+  final double MAX_LOAD = 1;
+  final double MIN_LOAD = 0.5;
   AtomicInteger itemCount;
   AtomicInteger numBuckets;
   // underlying LockFreeList
@@ -49,7 +50,7 @@ public class SplitOrderHashMap {
    * @return true if key is ordinary, false otherwise
    */
   public static boolean isOrdinaryKey(int key) {
-    return key & 1;
+    return (key & 1) == 1;
   }
 
   /**
@@ -87,7 +88,7 @@ public class SplitOrderHashMap {
    * @return num buckets in hash map.
    */
   public int numBuckets() {
-    return this.numBuckets.intValue();
+    return this.buckets.numBuckets();
   }
 
   /**
@@ -115,7 +116,8 @@ public class SplitOrderHashMap {
     // int bucketKey = makeSentinelKey(bucket);
     int parent = getParent(bucket);
     if (this.buckets.get(parent) == null) {
-      System.out.println("PARENTS does not exist so we're initialize parent: \t" + parent);
+      // System.out.println("PARENTS does not exist so we're initialize parent: \t" +
+      // parent);
       initialize_bucket(parent);
     }
 
@@ -123,6 +125,7 @@ public class SplitOrderHashMap {
 
     if (result != null) {
       // finally, init bucket with dummy node
+      // System.out.println("Initializing bucket " + bucket);
       this.buckets.set(bucket, result);
     }
   }
@@ -169,7 +172,10 @@ public class SplitOrderHashMap {
     if (result == null) {
       return false;
     }
-    this.itemCount.getAndDecrement();
+    int localNumBuckets = numBuckets();
+    if ((double) (this.itemCount.decrementAndGet() / localNumBuckets) < MIN_LOAD) {
+      this.numBuckets.compareAndSet(localNumBuckets, localNumBuckets / 2);
+    }
     return true;
   }
 
@@ -180,6 +186,7 @@ public class SplitOrderHashMap {
    * @return whether or not the data was inserted in the map
    */
   public boolean insert(int data) {
+    // System.out.println("Inserting " + data);
     int bucketIndex = data % numBuckets();
 
     if (this.buckets.get(bucketIndex) == null) {
@@ -195,8 +202,10 @@ public class SplitOrderHashMap {
     }
 
     int localNumBuckets = numBuckets();
+    // System.out.println(localNumBuckets);
     if ((double) (this.itemCount.incrementAndGet() / localNumBuckets) >= MAX_LOAD) {
-      this.numBuckets.compareAndSet(localNumBuckets, 2 * localNumBuckets);
+      // System.out.println("Expand");
+      this.buckets.expand();
     }
     return true;
   }
@@ -206,18 +215,19 @@ public class SplitOrderHashMap {
    */
   public String toString() {
     String s = "======================================================\nBUCKETS: \n";
-    final int out = SegmentTable.OUTER_SIZE;
-    final int in = SegmentTable.MIDDLE_SIZE;
+    AtomicReferenceArray<AtomicReferenceArray<Segment>> outerArray = this.buckets.currentTable.getReference();
+    final int outerLength = outerArray.length();
+    final int innerLength = SegmentTable.MIDDLE_SIZE;
     final int segSize = SegmentTable.SEGMENT_SIZE;
     // Loop through all active segments in order to print the segment table
-    for (int i = 0; i < out; i++) {
-      if (this.buckets.outerArray.get(i) != null) {
+    for (int i = 0; i < outerLength; i++) {
+      if (outerArray.get(i) != null) {
         s = s.concat("outer array position : " + i + "\n");
-        for (int j = 0; j < in; j++) {
-          if (this.buckets.outerArray.get(i).get(j) != null) {
+        for (int j = 0; j < innerLength; j++) {
+          if (outerArray.get(i).get(j) != null) {
             s = s.concat("\tinner array position : " + j + "\n");
             for (int k = 0; k < segSize; k++) {
-              Node node = this.buckets.outerArray.get(i).get(j).segment.get(k);
+              Node node = outerArray.get(i).get(j).segment.get(k);
               if (node != null) {
                 s = s.concat("\t\tsegment position : " + k + " " + node.toString() + " \n");
               }
@@ -226,6 +236,6 @@ public class SplitOrderHashMap {
         }
       }
     }
-    return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
+    return s; // s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
   }
 }
