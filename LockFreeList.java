@@ -128,8 +128,7 @@ public class LockFreeList {
    * @param data The data of the node we are trying to delete
    * @return Node that was deleted
    */
-  public Node deleteAfter(Node head, int data) {
-    int key = makeOrdinaryKey(data);
+  public Node deleteAfter(Node head, int key) {
     boolean snip;
     while (true) {
       Window window = findAfter(head, key);
