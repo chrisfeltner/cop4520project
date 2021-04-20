@@ -71,7 +71,6 @@ public class SegmentTable {
     if (bucket > stampHolder[0]) {
       return false;
     }
-    System.out.println("Hello");
     int outerIndex = bucket / (MIDDLE_SIZE * SEGMENT_SIZE);
     int innerIndex = (bucket - (outerIndex * MIDDLE_SIZE * SEGMENT_SIZE)) / SEGMENT_SIZE;
     int segmentIndex = (bucket - (outerIndex * MIDDLE_SIZE * SEGMENT_SIZE)) % SEGMENT_SIZE;

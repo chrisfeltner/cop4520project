@@ -2,7 +2,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class SplitOrderHashMap {
-  final double MAX_LOAD = 1;
+  final double MAX_LOAD = 2;
   final double MIN_LOAD = 0.5;
   AtomicInteger itemCount;
   AtomicInteger numBuckets;
