@@ -21,6 +21,7 @@ public class SegmentTable {
     outerArray.set(0, new AtomicReferenceArray<Segment>(MIDDLE_SIZE));
     outerArray.get(0).set(0, new Segment(SEGMENT_SIZE));
     currentTable = new AtomicStampedReference<AtomicReferenceArray<AtomicReferenceArray<Segment>>>(outerArray, 1);
+    oldTable = new AtomicStampedReference<AtomicReferenceArray<AtomicReferenceArray<Segment>>>(null, 0);
     oldTableCounter = new AtomicInteger(-1);
   }
 
@@ -109,47 +110,96 @@ public class SegmentTable {
   public boolean contract() {
     int[] originalSize = { 0 };
     AtomicReferenceArray<AtomicReferenceArray<Segment>> outerArray = this.currentTable.get(originalSize);
-
-    int[] oldTableSize = { 0 };
-    AtomicReferenceArray<AtomicReferenceArray<Segment>> oldTable = this.oldTable.get(oldTableSize);
-    int newSize = originalSize[0] / 2;
-    int outerArraySize = Math.max((newSize / (MIDDLE_SIZE * SEGMENT_SIZE)), 1);
-    AtomicReferenceArray<AtomicReferenceArray<Segment>> newOuterArray = new AtomicReferenceArray<AtomicReferenceArray<Segment>>(
-        outerArraySize);
-    AtomicReferenceArray<Segment> newInnerArray = new AtomicReferenceArray<Segment>(MIDDLE_SIZE);
-    Segment newSegment = new Segment(SEGMENT_SIZE);
-    if (newSize % MIDDLE_SIZE == 0) {
-      for (int i = 0; i < outerArraySize; i++) {
-        newOuterArray.set(i, outerArray.get(i));
-      }
-    } else {
-      if (newSize % SEGMENT_SIZE == 0) {
-        for (int i = 0; i < newSize / SEGMENT_SIZE; i++) {
-          newInnerArray.set(i, outerArray.get(0).get(i));
+    if (originalSize[0] > 1) {
+      int[] oldTableSize = { 0 };
+      AtomicReferenceArray<AtomicReferenceArray<Segment>> oldTable = this.oldTable.get(oldTableSize);
+      int newSize = Math.max(originalSize[0] / 2, 1);
+      int outerArraySize = Math.max((newSize / (MIDDLE_SIZE * SEGMENT_SIZE)), 1);
+      AtomicReferenceArray<AtomicReferenceArray<Segment>> newOuterArray = new AtomicReferenceArray<AtomicReferenceArray<Segment>>(
+          outerArraySize);
+      AtomicReferenceArray<Segment> newInnerArray = new AtomicReferenceArray<Segment>(MIDDLE_SIZE);
+      Segment newSegment = new Segment(SEGMENT_SIZE);
+      if (newSize % MIDDLE_SIZE == 0) {
+        for (int i = 0; i < outerArraySize; i++) {
+          newOuterArray.set(i, outerArray.get(i));
         }
-        newOuterArray.set(0, newInnerArray);
       } else {
-        for (int i = 0; i < newSize; i++) {
-          newSegment.segment.set(i, outerArray.get(0).get(0).segment.get(i));
+        if (newSize % SEGMENT_SIZE == 0) {
+          for (int i = 0; i < newSize / SEGMENT_SIZE; i++) {
+            newInnerArray.set(i, outerArray.get(0).get(i));
+          }
+          newOuterArray.set(0, newInnerArray);
+        } else {
+          for (int i = 0; i < newSize; i++) {
+            newSegment.segment.set(i, outerArray.get(0).get(0).segment.get(i));
+          }
+          newInnerArray.set(0, newSegment);
+          newOuterArray.set(0, newInnerArray);
         }
-        newInnerArray.set(0, newSegment);
-        newOuterArray.set(0, newInnerArray);
       }
+
+      boolean isOldTableSet = this.oldTable.compareAndSet(oldTable, outerArray, oldTableSize[0], originalSize[0]);
+
+      boolean isNewTableSet = this.currentTable.compareAndSet(outerArray, newOuterArray, originalSize[0], newSize);
+
+      if (isOldTableSet) {
+        this.oldTableCounter.set(originalSize[0]);
+      }
+
+      return isNewTableSet;
     }
-
-    boolean oldTableSet = this.oldTable.compareAndSet(oldTable, outerArray, oldTableSize[0], originalSize[0]);
-
-    boolean newTableSet = this.currentTable.compareAndSet(outerArray, newOuterArray, originalSize[0], newSize);
-
-    if (oldTableSet) {
-      this.oldTableCounter.set(0);
-    }
-
-    return newTableSet;
+    return false;
   }
 
   public int numBuckets() {
     return this.currentTable.getStamp();
+  }
+
+  private int getOuterIndex(int bucket) {
+    return bucket / (MIDDLE_SIZE * SEGMENT_SIZE);
+  }
+
+  private int getInnerIndex(int bucket, int outerIndex) {
+    return (bucket - (outerIndex * MIDDLE_SIZE * SEGMENT_SIZE)) / SEGMENT_SIZE;
+  }
+
+  private int getSegmentIndex(int bucket, int outerIndex) {
+    return (bucket - (outerIndex * MIDDLE_SIZE * SEGMENT_SIZE)) % SEGMENT_SIZE;
+  }
+
+  private int removeDummy(int bucket) {
+    int outerIndex = getOuterIndex(bucket);
+    int innerIndex = getInnerIndex(bucket, outerIndex);
+    int segmentIndex = getSegmentIndex(bucket, outerIndex);
+
+    Node dummyToRemove = this.oldTable.getReference().get(outerIndex).get(innerIndex).segment.get(segmentIndex);
+    if (dummyToRemove != null) {
+      return dummyToRemove.data;
+    }
+    return -1;
+  }
+
+  public int getUselessDummyKey() {
+    if (this.oldTableCounter.get() != -1) {
+      int key = this.oldTableCounter.getAndDecrement();
+      if (key >= this.currentTable.getStamp()) {
+        return removeDummy(key);
+      } else {
+        this.oldTableCounter.set(-1);
+        this.oldTable.set(null, 0);
+        return -1;
+      }
+    }
+    return -1;
+  }
+
+  public int getOldParent(int myBucket) {
+    int parent = this.oldTable.getStamp();
+    do {
+      parent = parent >> 1;
+    } while (parent > myBucket);
+    parent = myBucket - parent;
+    return parent;
   }
 
 }

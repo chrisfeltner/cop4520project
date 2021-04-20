@@ -137,6 +137,7 @@ public class SplitOrderHashMap {
    * @return whether the data was found in the map
    */
   public boolean find(int data) {
+    removeUselessDummy();
     int bucketIndex = data % numBuckets();
     Node bucket = this.buckets.get(bucketIndex);
     if (bucket == null) {
@@ -161,6 +162,7 @@ public class SplitOrderHashMap {
    * @return whether or not the data was deleted in the map
    */
   public boolean delete(int data) {
+    removeUselessDummy();
     int bucketIndex = data % numBuckets();
     Node bucket = this.buckets.get(bucketIndex);
     if (bucket == null) {
@@ -168,13 +170,14 @@ public class SplitOrderHashMap {
       initialize_bucket(bucketIndex);
     }
 
-    Node result = this.lockFreeList.deleteAfter(this.buckets.get(bucketIndex), data);
+    Node result = this.lockFreeList.deleteAfter(this.buckets.get(bucketIndex), makeOrdinaryKey(data));
     if (result == null) {
       return false;
     }
     int localNumBuckets = numBuckets();
     if ((double) (this.itemCount.decrementAndGet() / localNumBuckets) < MIN_LOAD) {
-      this.numBuckets.compareAndSet(localNumBuckets, localNumBuckets / 2);
+      System.out.println("Contracting");
+      this.buckets.contract();
     }
     return true;
   }
@@ -186,6 +189,7 @@ public class SplitOrderHashMap {
    * @return whether or not the data was inserted in the map
    */
   public boolean insert(int data) {
+    removeUselessDummy();
     // System.out.println("Inserting " + data);
     int bucketIndex = data % numBuckets();
 
@@ -208,6 +212,23 @@ public class SplitOrderHashMap {
       this.buckets.expand();
     }
     return true;
+  }
+
+  private void removeUselessDummy() {
+    for (int i = 0; i < 2; i++) {
+      int key = buckets.getUselessDummyKey();
+      if (key != -1) {
+        System.out.println("Removing " + key);
+        int parent = buckets.getOldParent(key);
+        Node parentNode = this.buckets.get(parent);
+        while (parentNode == null) {
+          parent = buckets.getOldParent(parent);
+          parentNode = this.buckets.get(parent);
+        }
+        this.lockFreeList.deleteAfter(this.buckets.get(parent), makeSentinelKey(key));
+      }
+    }
+
   }
 
   /**
