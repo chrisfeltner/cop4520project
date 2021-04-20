@@ -236,6 +236,6 @@ public class SplitOrderHashMap {
         }
       }
     }
-    return s; // s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
+    return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
   }
 }
