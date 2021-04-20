@@ -181,6 +181,7 @@ public class SegmentTable<T> {
    * @return inner array index
    */
   private int getInnerIndex(int bucket, int outerIndex) {
+    // System.out.println("" + bucket + " " + outerIndex);
     return (bucket - (outerIndex * MIDDLE_SIZE * SEGMENT_SIZE)) / SEGMENT_SIZE;
   }
 
@@ -208,14 +209,8 @@ public class SegmentTable<T> {
         Segment<T> segment = innerArray.get(innerIndex);
         if (segment != null) {
           dummy = segment.segment.get(segmentIndex);
-        } else {
-          System.out.println("Segment at innerIndex" + innerIndex + " is null");
         }
-      } else {
-        System.out.println("InnerArray is null");
       }
-    } else {
-      System.out.println("OuterArray is null");
     }
     if (dummy != null) {
       return dummy;
