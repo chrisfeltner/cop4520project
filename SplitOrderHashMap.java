@@ -1,5 +1,4 @@
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class SplitOrderHashMap<T> {
   final double MAX_LOAD = 2;
@@ -196,6 +195,10 @@ public class SplitOrderHashMap<T> {
     return true;
   }
 
+  /**
+   * "Tax" for operation: old dummy node removal. Removes two dummy nodes that are
+   * no longer accessible.
+   */
   private void removeUselessDummy() {
     for (int i = 0; i < 2; i++) {
       Node<T> dummy = buckets.getUselessDummy();

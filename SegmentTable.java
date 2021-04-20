@@ -151,39 +151,71 @@ public class SegmentTable<T> {
     return false;
   }
 
+  /**
+   * Return the number of buckets (size of table)
+   * 
+   * @return int number of buckets
+   */
   public int numBuckets() {
     return this.currentTable.getStamp();
   }
 
+  /**
+   * Gets the outer array index for the bucket number
+   * 
+   * @param bucket number
+   * @return outer array index
+   */
   private int getOuterIndex(int bucket) {
     return bucket / (MIDDLE_SIZE * SEGMENT_SIZE);
   }
 
+  /**
+   * Gets the inner array index for the bucket number
+   * 
+   * @param bucket
+   * @param outerIndex
+   * @return inner array index
+   */
   private int getInnerIndex(int bucket, int outerIndex) {
     return (bucket - (outerIndex * MIDDLE_SIZE * SEGMENT_SIZE)) / SEGMENT_SIZE;
   }
 
+  /**
+   * Gets the segment index for the bucket number
+   * 
+   * @param bucket
+   * @param outerIndex
+   * @return segment index
+   */
   private int getSegmentIndex(int bucket, int outerIndex) {
     return (bucket - (outerIndex * MIDDLE_SIZE * SEGMENT_SIZE)) % SEGMENT_SIZE;
   }
 
-  private Node<T> removeDummy(int bucket) {
+  private Node<T> getDummy(int bucket) {
     int outerIndex = getOuterIndex(bucket);
     int innerIndex = getInnerIndex(bucket, outerIndex);
     int segmentIndex = getSegmentIndex(bucket, outerIndex);
 
-    Node<T> dummyToRemove = this.oldTable.getReference().get(outerIndex).get(innerIndex).segment.get(segmentIndex);
-    if (dummyToRemove != null) {
-      return dummyToRemove;
+    Node<T> dummy = this.oldTable.getReference().get(outerIndex).get(innerIndex).segment.get(segmentIndex);
+    if (dummy != null) {
+      return dummy;
     }
     return null;
   }
 
+  /**
+   * Returns a dummy that is eligible for deletion. Decrements the oldTableCounter
+   * so that every operation returns a different dummy, and sets the counter to -1
+   * when there are no more dummies to remove.
+   * 
+   * @return Node<T> dummy to remove
+   */
   public Node<T> getUselessDummy() {
     if (this.oldTableCounter.get() != -1) {
       int key = this.oldTableCounter.getAndDecrement();
       if (key >= this.currentTable.getStamp()) {
-        return removeDummy(key);
+        return getDummy(key);
       } else {
         this.oldTableCounter.set(-1);
         this.oldTable.set(null, 0);
@@ -193,6 +225,13 @@ public class SegmentTable<T> {
     return null;
   }
 
+  /**
+   * Get the bucket number of the parent from the old table. This may not be the
+   * same as on the new table since the size is different.
+   * 
+   * @param myBucket bucket to get parent for
+   * @return int parent bucket number
+   */
   public int getOldParent(int myBucket) {
     int parent = this.oldTable.getStamp();
     do {
@@ -202,6 +241,11 @@ public class SegmentTable<T> {
     return parent;
   }
 
+  /**
+   * toString for SegmentTable.
+   * 
+   * @return String string representation of table
+   */
   public String toString() {
     String s = "======================================================\nBUCKETS: \n";
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = this.currentTable.getReference();
