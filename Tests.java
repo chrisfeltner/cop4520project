@@ -58,18 +58,16 @@ class IndividualTest implements Runnable
 
 public class Tests {
   @Test
-  public void testFind1() throws Exception
-  {
+  public void testFind1() throws Exception {
     // SubTest 1: insert a single element and try to find
     SplitOrderHashMap map1 = new SplitOrderHashMap();
     map1.insert(2);
-    // insert an element, find it 
+    // insert an element, find it
     assertEquals(true, map1.find(2));
   }
 
   @Test
-  public void testFind2() throws Exception
-  {
+  public void testFind2() throws Exception {
     // SubTest 2: try to find an unexisting element
     // should not find an unexisting element
     SplitOrderHashMap map2 = new SplitOrderHashMap();
@@ -80,8 +78,7 @@ public class Tests {
   }
 
   @Test
-  public void testFind3() throws Exception
-  {
+  public void testFind3() throws Exception {
     // SubTest 3: insert multiple elements and try to find them
     SplitOrderHashMap map3 = new SplitOrderHashMap();
     map3.insert(10);
@@ -99,9 +96,8 @@ public class Tests {
   }
 
   @Test
-  public void testFind4() throws Exception
-  {
-    //SubTest 4: try to find on an empty hashMap
+  public void testFind4() throws Exception {
+    // SubTest 4: try to find on an empty hashMap
     SplitOrderHashMap map4 = new SplitOrderHashMap();
     assertEquals(false, map4.find(2));
   }
@@ -268,7 +264,7 @@ public class Tests {
     map1.insert(2);
     map1.insert(3);
     map1.insert(4);
-    
+
     // check the traversal is as expected
     Node current1 = map1.lockFreeList.head;
     assertEquals(0, current1.data);
@@ -296,15 +292,14 @@ public class Tests {
   }
 
   @Test
-  public void testInsert2() throws Exception
-  {
+  public void testInsert2() throws Exception {
     // Subtest 2: inserting a few elements out of order
     SplitOrderHashMap map2 = new SplitOrderHashMap();
     map2.insert(1);
     map2.insert(4);
     map2.insert(2);
     map2.insert(3);
-    
+
     // check the traversal is as expected
     Node current2 = map2.lockFreeList.head;
     assertEquals(0, current2.data);
@@ -332,8 +327,7 @@ public class Tests {
   }
 
   @Test
-  public void testInsert3() throws Exception
-  {
+  public void testInsert3() throws Exception {
     // Subtest 3: inserting a few elements in decreasing order
     SplitOrderHashMap map3 = new SplitOrderHashMap();
     map3.insert(4);
@@ -341,7 +335,7 @@ public class Tests {
     map3.insert(2);
     map3.insert(1);
 
-    System.out.println(map3.toString());
+    // System.out.println(map3.toString());
     
     // check the traversal is as expected
     Node current3 = map3.lockFreeList.head;
@@ -370,8 +364,7 @@ public class Tests {
   }
 
   @Test
-  public void testInsert4() throws Exception
-  {
+  public void testInsert4() throws Exception {
     // Subtest 4: inserting duplicate items
     SplitOrderHashMap map4 = new SplitOrderHashMap();
     map4.insert(4);
@@ -380,8 +373,7 @@ public class Tests {
     map4.insert(3);
     map4.insert(2);
     map4.insert(1);
-    
-    
+
     // check the traversal is as expected
     Node current4 = map4.lockFreeList.head;
     assertEquals(0, current4.data);
@@ -565,8 +557,7 @@ public class Tests {
   }
 
   @Test
-  public void testDelete1() throws Exception
-  {
+  public void testDelete1() throws Exception {
     // Subtest 1: delete an element
     SplitOrderHashMap map1 = new SplitOrderHashMap();
     map1.insert(1);
@@ -575,7 +566,7 @@ public class Tests {
     map1.insert(4);
 
     map1.delete(4);
-    
+
     // check the traversal is as expected
     Node current1 = map1.lockFreeList.head;
     assertEquals(0, current1.data);
@@ -599,8 +590,7 @@ public class Tests {
   }
 
   @Test
-  public void testDelete2() throws Exception
-  {
+  public void testDelete2() throws Exception {
     // Subtest 2: delete a couple elements out of order
     SplitOrderHashMap map2 = new SplitOrderHashMap();
     map2.insert(1);
@@ -610,7 +600,7 @@ public class Tests {
 
     map2.delete(4);
     map2.delete(1);
-    
+
     // check the traversal is as expected
     Node current2 = map2.lockFreeList.head;
     assertEquals(0, current2.data);
@@ -630,8 +620,7 @@ public class Tests {
   }
 
   @Test
-  public void testDelete3() throws Exception
-  {
+  public void testDelete3() throws Exception {
     // Subtest 3: delete the whole list
     SplitOrderHashMap map3 = new SplitOrderHashMap();
     map3.insert(4);
@@ -664,8 +653,7 @@ public class Tests {
   }
 
   @Test
-  public void testDelete4() throws Exception
-  {
+  public void testDelete4() throws Exception {
     // Subtest 4: deleting duplicate items
     SplitOrderHashMap map4 = new SplitOrderHashMap();
     map4.insert(4);
