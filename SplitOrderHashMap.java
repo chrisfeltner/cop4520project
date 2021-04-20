@@ -1,17 +1,17 @@
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public class SplitOrderHashMap {
+public class SplitOrderHashMap<T> {
   final double MAX_LOAD = 2;
   final double MIN_LOAD = 0.5;
   final boolean CONTRACT = false;
   AtomicInteger itemCount;
   AtomicInteger numBuckets;
   // underlying LockFreeList
-  LockFreeList lockFreeList;
+  LockFreeList<T> lockFreeList;
 
   // dynamically sized buckets array
-  SegmentTable buckets;
+  SegmentTable<T> buckets;
 
   /**
    * Create a Split Ordered hash with initial Node.
@@ -20,28 +20,14 @@ public class SplitOrderHashMap {
   public SplitOrderHashMap() {
     // size of bucket list
     this.numBuckets = new AtomicInteger(1);
-    this.buckets = new SegmentTable();
+    this.buckets = new SegmentTable<T>();
     // this.buckets.add(null);
     // Node head = new Node(0, 0, 1);
     // num items in hash map
     this.itemCount = new AtomicInteger(0);
 
-    this.lockFreeList = new LockFreeList();
+    this.lockFreeList = new LockFreeList<T>();
     this.buckets.set(0, this.lockFreeList.head);
-  }
-
-  /**
-   * Generates a Key for a non-bucket / sentinel node.
-   *
-   * @param data The data of a node used to create the key.
-   * @return the ordinary key of the data
-   */
-  public static int makeOrdinaryKey(int key) {
-    Integer code;
-    code = key & 0x00FFFFFF;
-    code = Integer.reverse(code);
-    code |= 1;
-    return code;
   }
 
   /**
@@ -52,20 +38,6 @@ public class SplitOrderHashMap {
    */
   public static boolean isOrdinaryKey(int key) {
     return (key & 1) == 1;
-  }
-
-  /**
-   * 
-   * Generates a Key for a bucket / sentinel node.
-   *
-   * @param data The data of a node used to create the key.
-   * @return the sentinel key of the data node.
-   */
-  public static int makeSentinelKey(int key) {
-    Integer code;
-    code = key & 0x00FFFFFF;
-    code = Integer.reverse(code);
-    return code;
   }
 
   /**
@@ -114,7 +86,6 @@ public class SplitOrderHashMap {
    */
   private void initialize_bucket(int bucket) {
     // this would be binary
-    // int bucketKey = makeSentinelKey(bucket);
     int parent = getParent(bucket);
     if (this.buckets.get(parent) == null) {
       // System.out.println("PARENTS does not exist so we're initialize parent: \t" +
@@ -122,7 +93,7 @@ public class SplitOrderHashMap {
       initialize_bucket(parent);
     }
 
-    Node result = this.lockFreeList.insertAt(this.buckets.get(parent), bucket, true);
+    Node<T> result = this.lockFreeList.insertAt(this.buckets.get(parent), new Node<T>(bucket));
 
     if (result != null) {
       // finally, init bucket with dummy node
@@ -137,12 +108,12 @@ public class SplitOrderHashMap {
    * @param data the data to find
    * @return whether the data was found in the map
    */
-  public boolean find(int data) {
+  public boolean find(T data) {
     if (CONTRACT) {
       removeUselessDummy();
     }
-    int bucketIndex = data % numBuckets();
-    Node bucket = this.buckets.get(bucketIndex);
+    int bucketIndex = data.hashCode() % numBuckets();
+    Node<T> bucket = this.buckets.get(bucketIndex);
     if (bucket == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
       initialize_bucket(bucketIndex);
@@ -150,12 +121,13 @@ public class SplitOrderHashMap {
     }
 
     // TODO: need a findAt() function
-    Window window = this.lockFreeList.findAfter(bucket, makeOrdinaryKey(data));
-    Node pred = window.pred, curr = window.curr;
-    if (curr != null && curr.data == data)
+    Window<T> window = this.lockFreeList.findAfter(bucket, new Node<T>(data, false));
+    Node<T> curr = window.curr;
+    if (curr != null && curr.data.equals(data)) {
       return true;
-    else
+    } else {
       return false;
+    }
   }
 
   /**
@@ -164,18 +136,18 @@ public class SplitOrderHashMap {
    * @param data the data to delete
    * @return whether or not the data was deleted in the map
    */
-  public boolean delete(int data) {
+  public boolean delete(T data) {
     if (CONTRACT) {
       removeUselessDummy();
     }
-    int bucketIndex = data % numBuckets();
-    Node bucket = this.buckets.get(bucketIndex);
+    int bucketIndex = data.hashCode() % numBuckets();
+    Node<T> bucket = this.buckets.get(bucketIndex);
     if (bucket == null) {
       // recursively initialize parent bucket if it doesn't already exist. modulo
       initialize_bucket(bucketIndex);
     }
 
-    Node result = this.lockFreeList.deleteAfter(this.buckets.get(bucketIndex), makeOrdinaryKey(data));
+    Node<T> result = this.lockFreeList.deleteAfter(this.buckets.get(bucketIndex), new Node<T>(data, false));
     if (result == null) {
       return false;
     }
@@ -196,19 +168,19 @@ public class SplitOrderHashMap {
    * @param data the data to insert
    * @return whether or not the data was inserted in the map
    */
-  public boolean insert(int data) {
+  public boolean insert(T data) {
     if (CONTRACT) {
       removeUselessDummy();
     }
     // System.out.println("Inserting " + data);
-    int bucketIndex = data % numBuckets();
+    int bucketIndex = data.hashCode() % numBuckets();
 
     if (this.buckets.get(bucketIndex) == null) {
       initialize_bucket(bucketIndex);
     }
 
     // fail to insertAt into the lockFreeList, return 0
-    Node result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), data, false);
+    Node<T> result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), new Node<T>(data, false));
     if (result == null) {
       // System.out.println("Could NOT insert " + data);
       // delete node
@@ -226,16 +198,16 @@ public class SplitOrderHashMap {
 
   private void removeUselessDummy() {
     for (int i = 0; i < 2; i++) {
-      int key = buckets.getUselessDummyKey();
-      if (key != -1) {
-        System.out.println("Removing " + key);
-        int parent = buckets.getOldParent(key);
-        Node parentNode = this.buckets.get(parent);
+      Node<T> dummy = buckets.getUselessDummy();
+      if (dummy != null) {
+        System.out.println("Removing " + dummy.key);
+        int parent = buckets.getOldParent(dummy.key);
+        Node<T> parentNode = this.buckets.get(parent);
         while (parentNode == null) {
           parent = buckets.getOldParent(parent);
           parentNode = this.buckets.get(parent);
         }
-        this.lockFreeList.deleteAfter(this.buckets.get(parent), makeSentinelKey(key));
+        this.lockFreeList.deleteAfter(this.buckets.get(parent), dummy);
       }
     }
 
@@ -245,28 +217,7 @@ public class SplitOrderHashMap {
    * @return a string representation of the map.
    */
   public String toString() {
-    String s = "======================================================\nBUCKETS: \n";
-    AtomicReferenceArray<AtomicReferenceArray<Segment>> outerArray = this.buckets.currentTable.getReference();
-    final int outerLength = outerArray.length();
-    final int innerLength = SegmentTable.MIDDLE_SIZE;
-    final int segSize = SegmentTable.SEGMENT_SIZE;
-    // Loop through all active segments in order to print the segment table
-    for (int i = 0; i < outerLength; i++) {
-      if (outerArray.get(i) != null) {
-        s = s.concat("outer array position : " + i + "\n");
-        for (int j = 0; j < innerLength; j++) {
-          if (outerArray.get(i).get(j) != null) {
-            s = s.concat("\tinner array position : " + j + "\n");
-            for (int k = 0; k < segSize; k++) {
-              Node node = outerArray.get(i).get(j).segment.get(k);
-              if (node != null) {
-                s = s.concat("\t\tsegment position : " + k + " " + node.toString() + " \n");
-              }
-            }
-          }
-        }
-      }
-    }
+    String s = this.buckets.toString();
     return s.concat("\nUNDERLYING LIST:\n" + this.lockFreeList.toString());
   }
 }

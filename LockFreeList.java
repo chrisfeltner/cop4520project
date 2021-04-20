@@ -2,17 +2,17 @@ import java.lang.Integer;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
-public class LockFreeList {
-  Node head;
+public class LockFreeList<T> {
+  Node<T> head;
   AtomicInteger itemCount;
-  Node curr;
+  Node<T> curr;
 
   /**
    * Create a new LockFreeList.
    *
    */
   public LockFreeList() {
-    this.head = new Node(0, new AtomicMarkableReference<Node>(null, false), true);
+    this.head = new Node<T>(0);
     this.itemCount = new AtomicInteger(1);
     this.curr = head;
   }
@@ -23,8 +23,8 @@ public class LockFreeList {
    * @param keyToFind The value to find in the list
    * @return Window containing the predecessor and current nodes
    */
-  public Window find(int keyToFind) {
-    return findAfter(this.head, keyToFind);
+  public Window<T> find(Node<T> nodeToFind) {
+    return findAfter(this.head, nodeToFind);
   }
 
   /**
@@ -33,10 +33,10 @@ public class LockFreeList {
    * @param keyToFind The value to find in the list
    * @return Window containing the predecessor and current nodes
    */
-  public Window findAfter(Node head, int keyToFind) {
-    Node pred = null;
-    Node curr = null;
-    Node succ = null;
+  public Window<T> findAfter(Node<T> head, Node<T> nodeToFind) {
+    Node<T> pred = null;
+    Node<T> curr = null;
+    Node<T> succ = null;
     boolean[] marked = { false };
     boolean snip;
     retry: while (true) {
@@ -47,7 +47,7 @@ public class LockFreeList {
       curr = pred.next.getReference();
       while (true) {
         if (curr == null) {
-          return new Window(pred, curr);
+          return new Window<T>(pred, curr);
         }
         succ = curr.next.get(marked);
         while (marked[0]) {
@@ -58,8 +58,8 @@ public class LockFreeList {
           curr = succ;
           succ = curr.next.get(marked);
         }
-        if (Integer.compareUnsigned(curr.key, keyToFind) >= 0) {
-          return new Window(pred, curr);
+        if (Integer.compareUnsigned(curr.key, nodeToFind.key) >= 0) {
+          return new Window<T>(pred, curr);
         }
         pred = curr;
         curr = succ;
@@ -74,8 +74,8 @@ public class LockFreeList {
    * @param data the data to be inserted
    * @return Node that was inserted
    */
-  public Node insert(int data) {
-    return insertAt(this.head, data, false);
+  public Node<T> insert(Node<T> toInsert) {
+    return insertAt(this.head, toInsert);
   }
 
   /**
@@ -86,24 +86,16 @@ public class LockFreeList {
    * @param isDummy Whether or not the node is a bucket
    * @return Node that was inserted
    */
-  public Node insertAt(Node head, int data, boolean isDummy) {
-    int key;
-    if (isDummy) {
-      key = makeSentinelKey(data);
-    } else {
-      key = makeOrdinaryKey(data);
-    }
-
+  public Node<T> insertAt(Node<T> head, Node<T> toInsert) {
     while (true) {
-      Window window = findAfter(head, key);
-      Node pred = window.pred;
-      Node curr = window.curr;
-      if (curr != null && Integer.compareUnsigned(curr.key, key) == 0) {
+      Window<T> window = findAfter(head, toInsert);
+      Node<T> pred = window.pred;
+      Node<T> curr = window.curr;
+      if (curr != null && Integer.compareUnsigned(curr.key, toInsert.key) == 0) {
         return null;
       } else {
-        Node node = new Node(data, new AtomicMarkableReference<Node>(curr, false), isDummy);
-        if (pred.next.compareAndSet(curr, node, false, false)) {
-          return node;
+        if (pred.next.compareAndSet(curr, toInsert, false, false)) {
+          return toInsert;
         }
       }
     }
@@ -115,8 +107,8 @@ public class LockFreeList {
    * @param data The data of the node we are trying to delete
    * @return Node of what we deleted
    */
-  public Node delete(int data) {
-    return deleteAfter(this.head, data);
+  public Node<T> delete(Node<T> toDelete) {
+    return deleteAfter(this.head, toDelete);
   }
 
   /**
@@ -125,19 +117,19 @@ public class LockFreeList {
    * references).
    *
    * @param head Node reference where we will begin our traversal
-   * @param data The data of the node we are trying to delete
+   * @param key  The key of the node we are trying to delete
    * @return Node that was deleted
    */
-  public Node deleteAfter(Node head, int key) {
+  public Node<T> deleteAfter(Node<T> head, Node<T> toDelete) {
     boolean snip;
     while (true) {
-      Window window = findAfter(head, key);
-      Node pred = window.pred;
-      Node curr = window.curr;
-      if (Integer.compareUnsigned(curr.key, key) != 0) {
+      Window<T> window = findAfter(head, toDelete);
+      Node<T> pred = window.pred;
+      Node<T> curr = window.curr;
+      if (Integer.compareUnsigned(curr.key, toDelete.key) != 0) {
         return null;
       } else {
-        Node succ = curr.next.getReference();
+        Node<T> succ = curr.next.getReference();
         snip = curr.next.compareAndSet(succ, succ, false, true);
         if (!snip) {
           continue;
@@ -149,37 +141,10 @@ public class LockFreeList {
   }
 
   /**
-   * Generates a Key for a non-bucket / sentinel node.
-   * 
-   * @param data The data of a node used to create the key.
-   * @return the key of a non-bucket node.
-   */
-  public static int makeOrdinaryKey(int data) {
-    Integer code = data & 0x00FFFFFF;
-    code = Integer.reverse(code);
-    code |= 1;
-    // System.out.println(Integer.toUnsignedString​(code));
-    return code;
-  }
-
-  /**
-   * Generates a Key for a bucket / sentinel node.
-   * 
-   * @param data The data of a node used to create the key.
-   * @return the sentinel key for the data.
-   */
-  public static int makeSentinelKey(int data) {
-    Integer code = data & 0x00FFFFFF;
-    code = Integer.reverse(code);
-    // System.out.println(Integer.toUnsignedString​(code));
-    return code;
-  }
-
-  /**
    * Returns a string representation of the list.
    */
   public String toString() {
-    Node current = this.head;
+    Node<T> current = this.head;
     String string = "";
     while (current != null) {
       string += current.toString() + " -> ";

@@ -33,7 +33,7 @@ public class Runner {
     // System.out.println(list.toString());
 
     System.out.println("Testing SplitOrderedHashMap");
-    SplitOrderHashMap hashmap = new SplitOrderHashMap();
+    SplitOrderHashMap<Integer> hashmap = new SplitOrderHashMap<Integer>();
     System.out.println(hashmap);
     // int[] bag = new int[]{ 0,1,2,4};
     for (int i = 0; i <= 20; i++) {

@@ -1,14 +1,15 @@
-public class Window {
-    public Node pred, curr;
+public class Window<T> {
+  public Node<T> pred;
+  public Node<T> curr;
 
-    /**
-     * Create a Window object
-     *
-     * @param myPred The predecessor node
-     * @param myCurr The current node
-     */
-    public Window(Node myPred, Node myCurr) {
-        pred = myPred;
-        curr = myCurr;
-    }
+  /**
+   * Create a Window object.
+   *
+   * @param myPred The predecessor node
+   * @param myCurr The current node
+   */
+  public Window(Node<T> myPred, Node<T> myCurr) {
+    pred = myPred;
+    curr = myCurr;
+  }
 }
