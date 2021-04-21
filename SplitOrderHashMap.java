@@ -1,15 +1,16 @@
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class SplitOrderHashMap {
-  final double MAX_LOAD = 2;
+  double MAX_LOAD = 2;
   final double MIN_LOAD = 0.5;
   final boolean CONTRACT = false;
   AtomicInteger itemCount;
   AtomicInteger numBuckets;
   // underlying LockFreeList
   LockFreeList lockFreeList;
-
+  String name;
   // dynamically sized buckets array
   SegmentTable buckets;
 
@@ -30,6 +31,21 @@ public class SplitOrderHashMap {
     this.buckets.set(0, this.lockFreeList.head);
   }
 
+  public SplitOrderHashMap(int maxLoad) {
+    // size of bucket list
+    this.numBuckets = new AtomicInteger(1);
+    this.buckets = new SegmentTable();
+    // this.buckets.add(null);
+    // Node head = new Node(0, 0, 1);
+    // num items in hash map
+    this.itemCount = new AtomicInteger(0);
+
+    this.lockFreeList = new LockFreeList();
+    this.buckets.set(0, this.lockFreeList.head);
+    MAX_LOAD = maxLoad;
+    this.name = "splitOrderHash_MaxLoad_" + maxLoad;
+  }
+
   /**
    * Generates a Key for a non-bucket / sentinel node.
    *
@@ -46,7 +62,7 @@ public class SplitOrderHashMap {
 
   /**
    * Returns true if the given key is an ordinary key (LSB is 1)
-   * 
+   *
    * @param key to check
    * @return true if key is ordinary, false otherwise
    */
@@ -55,7 +71,7 @@ public class SplitOrderHashMap {
   }
 
   /**
-   * 
+   *
    * Generates a Key for a bucket / sentinel node.
    *
    * @param data The data of a node used to create the key.
@@ -70,7 +86,7 @@ public class SplitOrderHashMap {
 
   /**
    * Returns true if the given key is a sentinel (dummy) key (LSB is 0)
-   * 
+   *
    * @param key to check
    * @return true if key is sentinel (dummy), false otherwise
    */
@@ -95,7 +111,7 @@ public class SplitOrderHashMap {
   /**
    * Gets the parent of a given bucket. * @param myBucket The bucket whose parent
    * will be gotten
-   * 
+   *
    * @return the index of the parent bucket
    */
   private int getParent(int myBucket) {
@@ -109,7 +125,7 @@ public class SplitOrderHashMap {
 
   /**
    * Used Internally by insert() and constructors.
-   * 
+   *
    * @param bucket the bucket to initialize
    */
   private void initialize_bucket(int bucket) {
@@ -133,7 +149,7 @@ public class SplitOrderHashMap {
 
   /**
    * Try to find a certain data in the map.
-   * 
+   *
    * @param data the data to find
    * @return whether the data was found in the map
    */
@@ -160,7 +176,7 @@ public class SplitOrderHashMap {
 
   /**
    * Try to delete a certain data in the map
-   * 
+   *
    * @param data the data to delete
    * @return whether or not the data was deleted in the map
    */
@@ -192,7 +208,7 @@ public class SplitOrderHashMap {
 
   /**
    * Try to insert a certain data in the map
-   * 
+   *
    * @param data the data to insert
    * @return whether or not the data was inserted in the map
    */

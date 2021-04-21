@@ -43,6 +43,7 @@ public class LockFreeList {
       pred = head;
       if (pred == null) {
         System.out.println("PRED IS NULL???????");
+        return new Window(null, null);
       }
       curr = pred.next.getReference();
       while (true) {
@@ -134,7 +135,8 @@ public class LockFreeList {
       Window window = findAfter(head, key);
       Node pred = window.pred;
       Node curr = window.curr;
-      if (Integer.compareUnsigned(curr.key, key) != 0) {
+
+      if (curr == null || Integer.compareUnsigned(curr.key, key) != 0) {
         return null;
       } else {
         Node succ = curr.next.getReference();
@@ -150,7 +152,7 @@ public class LockFreeList {
 
   /**
    * Generates a Key for a non-bucket / sentinel node.
-   * 
+   *
    * @param data The data of a node used to create the key.
    * @return the key of a non-bucket node.
    */
@@ -164,7 +166,7 @@ public class LockFreeList {
 
   /**
    * Generates a Key for a bucket / sentinel node.
-   * 
+   *
    * @param data The data of a node used to create the key.
    * @return the sentinel key for the data.
    */
