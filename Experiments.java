@@ -111,7 +111,7 @@ public class Experiments {
     virtualization at larger thread counts.
 
 
-    Tried 50 on a 14-16 thread capable machine. Lets try up to 16.
+    Tried 50 on a 14-16 thread capable machine. Lets try up to 12.
 
 
    */
@@ -130,6 +130,8 @@ public class Experiments {
       sb.append("Threads");
       sb.append(",");
       sb.append("OperationsPerMilliSecond");
+      sb.append(",");
+      sb.append("LogOperationsPerMilliSecond");
       sb.append('\n');
 
 
@@ -201,6 +203,8 @@ public class Experiments {
         sb.append(numThreads);
         sb.append(',');
         sb.append(opsPerMilliSecond);
+        sb.append(',');
+        sb.append(Math.log(opsPerMilliSecond));
         sb.append('\n');
 
       }
@@ -246,8 +250,9 @@ public class Experiments {
         sb.append(numThreads);
         sb.append(',');
         sb.append(opsPerMilliSecond);
+        sb.append(',');
+        sb.append(Math.log(opsPerMilliSecond));
         sb.append('\n');
-
       }
       mapIndex++;
     }
