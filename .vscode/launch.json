@@ -4,11 +4,18 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
-            "type": "java",
-            "name": "Launch Current File",
-            "request": "launch",
-            "mainClass": "Runner"
-        }
+      {
+        "type": "java",
+        "name": "Launch Experiments",
+        "request": "launch",
+        "mainClass": "Experiments",
+        "projectName": "cop4520project_1fe46364"
+      },
+      {
+        "type": "java",
+        "name": "Launch Current File",
+        "request": "launch",
+        "mainClass": "Runner"
+      }
     ]
 }

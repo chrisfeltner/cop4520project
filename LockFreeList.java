@@ -78,14 +78,10 @@ public class LockFreeList<T> {
    * Insert a node after the head of the list.
    *
    * @param data the data to be inserted
-   * @return Node that was inserted
-   */
-  public Node<T> insert(Node<T> toInsert) {
-    return insertAt(this.head, toInsert);
-  }
-
-  /**
-   * Insert a node after another node.
+   * @return Node that was insertedsucc = curr.next.get(marked); public Node<T>
+   *         insert(Node<T> toInsert) { return insertAt(this.head, toInsert); }
+   * 
+   *         /** Insert a node after another node.
    *
    * @param head    The head or shortcut in the list (where to start)
    * @param data    The data to be inserted
@@ -158,6 +154,23 @@ public class LockFreeList<T> {
         return curr;
       }
     }
+  }
+
+  public boolean contains(Node<T> head, Node<T> nodeToFind) {
+    boolean[] marked = { false };
+    int key = nodeToFind.key;
+    Node<T> curr = head;
+    if (head.next.getReference() == null) {
+      return false;
+    }
+    while (Integer.compareUnsigned(curr.key, nodeToFind.key) < 0) {
+      curr = curr.next.getReference();
+      if (curr == null) {
+        return false;
+      }
+      Node<T> succ = curr.next.get(marked);
+    }
+    return (Integer.compareUnsigned(curr.key, key) == 0 && !marked[0]);
   }
 
   public String toString() {

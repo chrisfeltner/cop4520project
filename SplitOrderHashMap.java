@@ -148,13 +148,7 @@ public class SplitOrderHashMap<T> {
       bucket = this.buckets.get(bucketIndex);
     }
 
-    Window<T> window = this.lockFreeList.findAfter(bucket, new Node<T>(data, false));
-    Node<T> curr = window.curr;
-    if (curr != null && curr.data != null && curr.data.equals(data)) {
-      return true;
-    } else {
-      return false;
-    }
+    return this.lockFreeList.contains(bucket, new Node<T>(data, false));
   }
 
   /**
