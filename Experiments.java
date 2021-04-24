@@ -23,9 +23,9 @@ class IndividualExperiment implements Runnable
 
   List<Integer> data;
   List<Integer> operations;
-  SplitOrderHashMap map;
+  SplitOrderHashMap<Integer> map;
 
-  public IndividualExperiment(SplitOrderHashMap map1, List<Integer> data1, List<Integer> operations1)
+  public IndividualExperiment(SplitOrderHashMap<Integer> map1, List<Integer> data1, List<Integer> operations1)
   {
     data = data1;
     operations = operations1;
@@ -117,9 +117,9 @@ public class Experiments {
    */
   public static void uniformOperationDistribution() throws Exception
   {
-    int NUM_OPERATIONS = 100000;
+    int NUM_OPERATIONS = 10000;
     int MAX_THREADS = 12;
-    int MAX_NUM = 16777215;
+    int MAX_NUM = 100;
     try (PrintWriter writer = new PrintWriter(new File("LoadFactorTest.csv"))) {
       // initialize results CSV
       StringBuilder sb = new StringBuilder();
@@ -135,11 +135,11 @@ public class Experiments {
       sb.append('\n');
 
 
-      SplitOrderHashMap map1 = new SplitOrderHashMap(1);
-      SplitOrderHashMap map2 = new SplitOrderHashMap(2);
-      SplitOrderHashMap map4 = new SplitOrderHashMap(4);
-      SplitOrderHashMap map8 = new SplitOrderHashMap(8);
-      SplitOrderHashMap map16 = new SplitOrderHashMap(16);
+      SplitOrderHashMap<Integer> map1 = new SplitOrderHashMap<Integer>(1);
+      SplitOrderHashMap<Integer> map2 = new SplitOrderHashMap<Integer>(2);
+      SplitOrderHashMap<Integer> map4 = new SplitOrderHashMap<Integer>(4);
+      SplitOrderHashMap<Integer> map8 = new SplitOrderHashMap<Integer>(8);
+      SplitOrderHashMap<Integer> map16 = new SplitOrderHashMap<Integer>(16);
 
       RefinableHashSet<Integer> rMap1= new RefinableHashSet<>(1);
       RefinableHashSet<Integer> rMap2= new RefinableHashSet<>(2);
@@ -147,7 +147,7 @@ public class Experiments {
       RefinableHashSet<Integer> rMap8= new RefinableHashSet<>(8);
       RefinableHashSet<Integer> rMap16 = new RefinableHashSet<>(16);
 
-      ArrayList<SplitOrderHashMap> maps = new ArrayList<>(Arrays.asList(map1, map2, map4, map8, map16));
+      ArrayList<SplitOrderHashMap<Integer>> maps = new ArrayList<>(Arrays.asList(map1, map2, map4, map8, map16));
       ArrayList<RefinableHashSet<Integer>> rMaps = new ArrayList<>(Arrays.asList(rMap1, rMap2, rMap4, rMap8, rMap16));
 
 
@@ -163,7 +163,7 @@ public class Experiments {
       operations1.add(randomOp);
     }
     int mapIndex = 0;
-    for (SplitOrderHashMap map : maps) {
+    for (SplitOrderHashMap<Integer> map : maps) {
       for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
 
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);

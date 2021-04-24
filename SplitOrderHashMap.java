@@ -5,7 +5,7 @@ public class SplitOrderHashMap<T> {
   double MAX_LOAD = 2;
 
   final double MIN_LOAD = 0.5;
-  final boolean CONTRACT = true;
+  final boolean CONTRACT = false;
   AtomicInteger itemCount;
   AtomicInteger numBuckets;
   // underlying LockFreeList
@@ -156,10 +156,9 @@ public class SplitOrderHashMap<T> {
       bucket = this.buckets.get(bucketIndex);
     }
 
-    // TODO: need a findAt() function
     Window<T> window = this.lockFreeList.findAfter(bucket, new Node<T>(data, false));
     Node<T> curr = window.curr;
-    if (curr != null && curr.data.equals(data)) {
+    if (curr != null && curr.data != null && curr.data.equals(data)) {
       return true;
     } else {
       return false;

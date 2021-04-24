@@ -102,6 +102,7 @@ public class SegmentTable<T> {
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> newOuterArray = new AtomicReferenceArray<AtomicReferenceArray<Segment<T>>>(
         outerArraySize);
     for (int i = 0; i <= originalSize[0] / (MIDDLE_SIZE * SEGMENT_SIZE); i++) {
+
       newOuterArray.set(i, outerArray.get(i));
     }
     return this.currentTable.compareAndSet(outerArray, newOuterArray, originalSize[0], newSize);
@@ -156,7 +157,7 @@ public class SegmentTable<T> {
 
   /**
    * Return the number of buckets (size of table)
-   * 
+   *
    * @return int number of buckets
    */
   public int numBuckets() {
@@ -165,7 +166,7 @@ public class SegmentTable<T> {
 
   /**
    * Gets the outer array index for the bucket number
-   * 
+   *
    * @param bucket number
    * @return outer array index
    */
@@ -175,7 +176,7 @@ public class SegmentTable<T> {
 
   /**
    * Gets the inner array index for the bucket number
-   * 
+   *
    * @param bucket
    * @param outerIndex
    * @return inner array index
@@ -187,7 +188,7 @@ public class SegmentTable<T> {
 
   /**
    * Gets the segment index for the bucket number
-   * 
+   *
    * @param bucket
    * @param outerIndex
    * @return segment index
@@ -222,7 +223,7 @@ public class SegmentTable<T> {
    * Returns a dummy that is eligible for deletion. Decrements the oldTableCounter
    * so that every operation returns a different dummy, and sets the counter to -1
    * when there are no more dummies to remove.
-   * 
+   *
    * @return Node<T> dummy to remove
    */
   public Node<T> getUselessDummy() {
@@ -241,7 +242,7 @@ public class SegmentTable<T> {
   /**
    * Get the bucket number of the parent from the old table. This may not be the
    * same as on the new table since the size is different.
-   * 
+   *
    * @param myBucket bucket to get parent for
    * @return int parent bucket number
    */
@@ -256,7 +257,7 @@ public class SegmentTable<T> {
 
   /**
    * toString for SegmentTable.
-   * 
+   *
    * @return String string representation of table
    */
   public String toString() {

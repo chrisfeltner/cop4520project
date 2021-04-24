@@ -92,7 +92,7 @@ public class LockFreeList<T> {
       Window<T> window = findAfter(head, toInsert);
       Node<T> pred = window.pred;
       Node<T> curr = window.curr;
-      if (curr != null && Integer.compareUnsigned(curr.key, toInsert.key) == 0) {
+      if (curr != null && toInsert != null && Integer.compareUnsigned(curr.key, toInsert.key) == 0) {
         return null;
       } else {
         toInsert.next.set(curr, false);
@@ -142,39 +142,6 @@ public class LockFreeList<T> {
     }
   }
 
-  /**
-<<<<<<< HEAD
-   * Generates a Key for a non-bucket / sentinel node.
-   *
-   * @param data The data of a node used to create the key.
-   * @return the key of a non-bucket node.
-   */
-  public static int makeOrdinaryKey(int data) {
-    Integer code = data & 0x00FFFFFF;
-    code = Integer.reverse(code);
-    code |= 1;
-    // System.out.println(Integer.toUnsignedString​(code));
-    return code;
-  }
-
-  /**
-   * Generates a Key for a bucket / sentinel node.
-   *
-   * @param data The data of a node used to create the key.
-   * @return the sentinel key for the data.
-   */
-  public static int makeSentinelKey(int data) {
-    Integer code = data & 0x00FFFFFF;
-    code = Integer.reverse(code);
-    // System.out.println(Integer.toUnsignedString​(code));
-    return code;
-  }
-
-  /**
-=======
->>>>>>> b9e643b40104615919010c26575d267fe2fc39d5
-   * Returns a string representation of the list.
-   */
   public String toString() {
     Node<T> current = this.head;
     String string = "";
