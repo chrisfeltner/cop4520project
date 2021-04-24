@@ -34,15 +34,42 @@ public class Runner {
 
     System.out.println("Testing SplitOrderedHashMap");
     SplitOrderHashMap<Integer> hashmap = new SplitOrderHashMap<Integer>();
-    // System.out.println(hashmap);
+    //
     // int[] bag = new int[]{ 0,1,2,4};
-    for (int i = 0; i <= 20; i++) {
-      hashmap.insert(i);
-      System.out.println(hashmap);
-    }
-    for (int i = 0; i <= 20; i++) {
-      hashmap.delete(i);
-      System.out.println(hashmap);
+    Thread t = new Thread() {
+      public void run() {
+        for (int i = 0; i <= 1000; i++) {
+          hashmap.insert(i);
+          // System.out.println(hashmap);
+        }
+        for (int i = 0; i <= 2000; i++) {
+          hashmap.delete(i);
+          // System.out.println(hashmap);
+        }
+      }
+    };
+
+    Thread u = new Thread() {
+      public void run() {
+        for (int i = 30; i <= 1000; i++) {
+          hashmap.insert(i);
+          // System.out.println(hashmap);
+        }
+        for (int i = 20; i <= 400; i++) {
+          hashmap.delete(i);
+          // System.out.println(hashmap);
+        }
+      }
+    };
+
+    t.start();
+    u.start();
+    try {
+      t.join();
+      u.join();
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
 
     // hashmap.insert(1);

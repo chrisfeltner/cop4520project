@@ -37,13 +37,13 @@ public class SplitOrderHashMap<T> {
   public SplitOrderHashMap(int maxLoad) {
     // size of bucket list
     this.numBuckets = new AtomicInteger(1);
-    this.buckets = new SegmentTable();
+    this.buckets = new SegmentTable<T>();
     // this.buckets.add(null);
     // Node head = new Node(0, 0, 1);
     // num items in hash map
     this.itemCount = new AtomicInteger(0);
 
-    this.lockFreeList = new LockFreeList();
+    this.lockFreeList = new LockFreeList<T>();
     this.buckets.set(0, this.lockFreeList.head);
     MAX_LOAD = maxLoad;
     this.name = "splitOrderHash_MaxLoad_" + maxLoad;
@@ -106,18 +106,27 @@ public class SplitOrderHashMap<T> {
   private void initialize_bucket(int bucket) {
     // this would be binary
     int parent = getParent(bucket);
+    // System.out.println("Initialize bucket " + bucket + " with parent " + parent);
     if (this.buckets.get(parent) == null) {
       // System.out.println("PARENTS does not exist so we're initialize parent: \t" +
       // parent);
       initialize_bucket(parent);
     }
+    Node<T> newDummy = new Node<T>(bucket);
 
-    Node<T> result = this.lockFreeList.insertAt(this.buckets.get(parent), new Node<T>(bucket));
+    Node<T> result = this.lockFreeList.insertAt(this.buckets.get(parent), newDummy);
 
     if (result != null) {
       // finally, init bucket with dummy node
-      // System.out.println("Initializing bucket " + bucket);
       this.buckets.set(bucket, result);
+    }
+    // Another thread may have initialized the bucket in the time it took us to do
+    // it.
+    // Insert fails on duplicate keys, so let's check if the segment table has the
+    // element.
+    else if (this.buckets.get(bucket) == null) {
+
+      initialize_bucket(bucket);
     }
   }
 
@@ -190,10 +199,12 @@ public class SplitOrderHashMap<T> {
     if (CONTRACT) {
       removeUselessDummy();
     }
-    // System.out.println("Inserting " + data);
+
     int bucketIndex = data.hashCode() % numBuckets();
+    // System.out.println("Inserting " + data + " at bucket " + bucketIndex);
 
     if (this.buckets.get(bucketIndex) == null) {
+      // System.out.println("Bucket " + bucketIndex + " does not exist.");
       initialize_bucket(bucketIndex);
     }
 
@@ -201,7 +212,6 @@ public class SplitOrderHashMap<T> {
     Node<T> result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), new Node<T>(data, false));
     if (result == null) {
       // System.out.println("Could NOT insert " + data);
-      // delete node
       return false;
     }
 
