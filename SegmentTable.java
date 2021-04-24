@@ -97,6 +97,7 @@ public class SegmentTable<T> {
   public boolean expand() {
     int[] originalSize = { 0 };
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = this.currentTable.get(originalSize);
+    // System.out.println(originalSize);
     int newSize = originalSize[0] * 2;
     int outerArraySize = (newSize / (MIDDLE_SIZE * SEGMENT_SIZE)) + 1;
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> newOuterArray = new AtomicReferenceArray<AtomicReferenceArray<Segment<T>>>(
@@ -105,6 +106,7 @@ public class SegmentTable<T> {
 
       newOuterArray.set(i, outerArray.get(i));
     }
+    // System.out.println(this.toString());
     return this.currentTable.compareAndSet(outerArray, newOuterArray, originalSize[0], newSize);
   }
 
