@@ -60,23 +60,6 @@ public class SplitOrderHashMap<T> {
   }
 
   /**
-<<<<<<< HEAD
-   *
-   * Generates a Key for a bucket / sentinel node.
-   *
-   * @param data The data of a node used to create the key.
-   * @return the sentinel key of the data node.
-   */
-  public static int makeSentinelKey(int key) {
-    Integer code;
-    code = key & 0x00FFFFFF;
-    code = Integer.reverse(code);
-    return code;
-  }
-
-  /**
-=======
->>>>>>> b9e643b40104615919010c26575d267fe2fc39d5
    * Returns true if the given key is a sentinel (dummy) key (LSB is 0)
    *
    * @param key to check
