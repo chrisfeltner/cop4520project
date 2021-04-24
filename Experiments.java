@@ -101,9 +101,9 @@ public class Experiments {
    * 
    */
   public static void uniformOperationDistribution() throws Exception {
-    int NUM_OPERATIONS = 100000;
+    int NUM_OPERATIONS = 10000;
     int MAX_THREADS = 12;
-    int MAX_NUM = 16777215;
+    int MAX_NUM = 100;
     try (PrintWriter writer = new PrintWriter(new File("LoadFactorTest.csv"))) {
       // initialize results CSV
       StringBuilder sb = new StringBuilder();
