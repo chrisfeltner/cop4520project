@@ -56,6 +56,9 @@ public class LockFreeList<T> {
           if (!snip) {
             continue retry;
           }
+          if (succ == null) {
+            return new Window<T>(curr, succ);
+          }
           curr = succ;
           succ = curr.next.get(marked);
         }
