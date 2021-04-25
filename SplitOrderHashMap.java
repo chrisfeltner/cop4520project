@@ -176,12 +176,17 @@ public class SplitOrderHashMap<T> {
     }
   }
 
-  /**
-   * Try to delete a certain data in the map
-   *
-   * @param data the data to delete
-   * @return whether or not the data was deleted in the map
-   */
+  public boolean contains(T data) {
+    return this.lockFreeList.contains(this.lockFreeList.head, new Node<T>(data, false));
+  }
+
+
+    /**
+     * Try to delete a certain data in the map
+     *
+     * @param data the data to delete
+     * @return whether or not the data was deleted in the map
+     */
   public boolean delete(T data) {
     if (CONTRACT) {
       removeUselessDummy();

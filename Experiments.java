@@ -15,9 +15,9 @@ class IndividualExperiment implements Runnable
 
   List<Integer> data;
   List<Integer> operations;
-  SplitOrderHashMap map;
+  SplitOrderHashMap<Integer> map;
 
-  public IndividualExperiment(SplitOrderHashMap map1, List<Integer> data1, List<Integer> operations1)
+  public IndividualExperiment(SplitOrderHashMap<Integer> map1, List<Integer> data1, List<Integer> operations1)
   {
     data = data1;
     operations = operations1;
@@ -38,7 +38,7 @@ class IndividualExperiment implements Runnable
       Integer currentValue = data.get(i);
 
       if(currentOperation == FIND)
-        this.map.find(currentValue);
+        this.map.contains(currentValue);
       else if (currentOperation == INSERT)
         this.map.insert(currentValue);
       else if (currentOperation == DELETE)
