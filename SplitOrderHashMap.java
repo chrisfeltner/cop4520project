@@ -5,7 +5,7 @@ public class SplitOrderHashMap<T> {
   double MAX_LOAD = 2;
 
   final double MIN_LOAD = 0.5;
-  final boolean CONTRACT = true;
+  final boolean CONTRACT = false;
   AtomicInteger itemCount;
   AtomicInteger numBuckets;
   // underlying LockFreeList
@@ -237,7 +237,7 @@ public class SplitOrderHashMap<T> {
 
       // System.out.println("Inserting " + data + " at bucket " + bucketIndex);
 
-      if (this.buckets.get(bucketIndex) == null) {
+      while (bucketIndex < this.numBuckets() && this.buckets.get(bucketIndex) == null) {
         // System.out.println("Bucket " + bucketIndex + " does not exist.");
         initialize_bucket(bucketIndex);
       }
