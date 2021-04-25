@@ -448,14 +448,14 @@ public class Experiments {
 
 
   public static void varyingOperationDistribution(int NUM_OPERATIONS, int MAX_THREADS, int MIN_NUM, int MAX_NUM,
-                                                  double percentGet, double percentInsert, double percentRemove) throws Exception
+                                                  double percentGet, double percentInsert, double percentRemove, String csvName) throws Exception
   {
 
     System.out.println("We are doing " + percentGet + "GET OPERATIONS");
     System.out.println("We are doing " + percentInsert + "INSERT OPERATIONS");
     System.out.println("We are doing " + percentRemove + "REMOVE OPERATIONS");
 
-    try (PrintWriter writer = new PrintWriter(new File("varyingOperationDistribution.csv"))) {
+    try (PrintWriter writer = new PrintWriter(new File(csvName))) {
       // initialize results CSV
       StringBuilder sb = new StringBuilder();
       sb.append("num_map");
@@ -713,7 +713,10 @@ public class Experiments {
     // use random libraries for uniform distribution of operations
     uniformOperationDistribution(100000, 32, 12000, 12222);
     varyingOperationDistribution(100000, 32, 54300, 54300,
-            (1./3), (1./3), (1./3));
+            (1./3), (1./3), (1./3), "thirdsDist.csv");
+
+    varyingOperationDistribution(100000, 32, 54300, 54300,
+            (1./5), (2./5), (2./5), "204040.csv");
   }
 
 }
