@@ -93,8 +93,12 @@ public class LockFreeList<T> {
    * @return Node that was inserted
    */
   public Node<T> insertAt(Node<T> head, Node<T> toInsert) {
-    if (toInsert == null || head == null) {
-      System.out.println("Insert requires a head and a node to insert.");
+    if (head == null) {
+      System.out.println("Insert requires a head.");
+      return null;
+    }
+    if (toInsert == null) {
+      System.out.println("Insert requires a node to insert.");
       return null;
     }
     while (true) {

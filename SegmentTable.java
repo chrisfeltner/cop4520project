@@ -19,7 +19,7 @@ public class SegmentTable<T> {
     // Upon creation of segment table make segment 0 active for dummy node 0
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = new AtomicReferenceArray<>(1);
     outerArray.set(0, new AtomicReferenceArray<Segment<T>>(MIDDLE_SIZE));
-    outerArray.get(0).set(0, new Segment(SEGMENT_SIZE));
+    outerArray.get(0).set(0, new Segment<T>(SEGMENT_SIZE));
     currentTable = new AtomicStampedReference<AtomicReferenceArray<AtomicReferenceArray<Segment<T>>>>(outerArray, 1);
     oldTable = new AtomicStampedReference<AtomicReferenceArray<AtomicReferenceArray<Segment<T>>>>(null, 0);
     oldTableCounter = new AtomicInteger(-1);
@@ -34,8 +34,10 @@ public class SegmentTable<T> {
   public Node<T> get(int bucket) {
     int[] stampHolder = { 0 };
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = this.currentTable.get(stampHolder);
+
     // Check if the bucket is within the current size
     if (bucket > stampHolder[0]) {
+      // System.out.println("Bucket > numBuckets");
       return null;
     }
     int outerIndex = bucket / (MIDDLE_SIZE * SEGMENT_SIZE);
@@ -94,10 +96,12 @@ public class SegmentTable<T> {
     return seg.segment.compareAndSet(segmentIndex, null, dummyNode);
   }
 
-  public boolean expand() {
+  public boolean expand(int numBuckets) {
     int[] originalSize = { 0 };
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = this.currentTable.get(originalSize);
-    // System.out.println(originalSize);
+    if (numBuckets != originalSize[0]) {
+      return false;
+    }
     int newSize = originalSize[0] * 2;
     int outerArraySize = (newSize / (MIDDLE_SIZE * SEGMENT_SIZE)) + 1;
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> newOuterArray = new AtomicReferenceArray<AtomicReferenceArray<Segment<T>>>(
@@ -110,9 +114,13 @@ public class SegmentTable<T> {
     return this.currentTable.compareAndSet(outerArray, newOuterArray, originalSize[0], newSize);
   }
 
-  public boolean contract() {
+  public boolean contract(int numBuckets) {
     int[] originalSize = { 0 };
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = this.currentTable.get(originalSize);
+    if (numBuckets != originalSize[0]) {
+      // System.out.println("Size mismatch");
+      return false;
+    }
     if (originalSize[0] > 1) {
       int[] oldTableSize = { 0 };
       AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> oldTable = this.oldTable.get(oldTableSize);
@@ -144,9 +152,12 @@ public class SegmentTable<T> {
         }
       }
 
-      boolean isOldTableSet = this.oldTable.compareAndSet(oldTable, outerArray, oldTableSize[0], originalSize[0]);
-
       boolean isNewTableSet = this.currentTable.compareAndSet(outerArray, newOuterArray, originalSize[0], newSize);
+      boolean isOldTableSet = false;
+
+      if (isNewTableSet) {
+        isOldTableSet = this.oldTable.compareAndSet(oldTable, outerArray, oldTableSize[0], originalSize[0]);
+      }
 
       if (isOldTableSet) {
         this.oldTableCounter.set(originalSize[0] - 1);

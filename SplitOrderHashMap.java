@@ -5,7 +5,7 @@ public class SplitOrderHashMap<T> {
   double MAX_LOAD = 2;
 
   final double MIN_LOAD = 0.5;
-  final boolean CONTRACT = false;
+  final boolean CONTRACT = true;
   AtomicInteger itemCount;
   AtomicInteger numBuckets;
   // underlying LockFreeList
@@ -80,7 +80,7 @@ public class SplitOrderHashMap<T> {
    * @return num buckets in hash map.
    */
   public int numBuckets() {
-    return this.buckets.numBuckets();
+    return this.buckets.currentTable.getStamp();
   }
 
   /**
@@ -90,7 +90,10 @@ public class SplitOrderHashMap<T> {
    * @return the index of the parent bucket
    */
   private int getParent(int myBucket) {
-    int parent = numBuckets();
+    if (myBucket == 1) {
+      return 0;
+    }
+    int parent = this.buckets.currentTable.getStamp();
     do {
       parent = parent >> 1;
     } while (parent > myBucket);
@@ -126,7 +129,7 @@ public class SplitOrderHashMap<T> {
     // element.
     else if (this.buckets.get(bucket) == null) {
 
-      initialize_bucket(bucket);
+      this.buckets.set(bucket, result);
     }
   }
 
@@ -140,16 +143,28 @@ public class SplitOrderHashMap<T> {
     if (CONTRACT) {
       removeUselessDummy();
     }
-    int bucketIndex = data.hashCode() % numBuckets();
-    Node<T> bucket = this.buckets.get(bucketIndex);
-    if (bucket == null) {
-      // recursively initialize parent bucket if it doesn't already exist. modulo
-      initialize_bucket(bucketIndex);
-      bucket = this.buckets.get(bucketIndex);
+    boolean retry = true;
+    Node<T> curr = null;
+    while (retry) {
+      int numBuckets = this.buckets.currentTable.getStamp();
+      int bucketIndex = data.hashCode() % numBuckets;
+      Node<T> bucket = this.buckets.get(bucketIndex);
+      if (bucket == null) {
+        // recursively initialize parent bucket if it doesn't already exist. modulo
+        initialize_bucket(bucketIndex);
+      }
+
+      Window<T> window = this.lockFreeList.findAfter(this.buckets.get(bucketIndex), new Node<T>(data, false));
+      curr = window.curr;
+      if (curr == null) {
+        if (numBuckets != this.buckets.currentTable.getStamp()) {
+          retry = true;
+          continue;
+        }
+      }
+      retry = false;
     }
 
-    Window<T> window = this.lockFreeList.findAfter(bucket, new Node<T>(data, false));
-    Node<T> curr = window.curr;
     if (curr != null && curr.data != null && curr.data.equals(data)) {
       return true;
     } else {
@@ -167,22 +182,33 @@ public class SplitOrderHashMap<T> {
     if (CONTRACT) {
       removeUselessDummy();
     }
-    int bucketIndex = data.hashCode() % numBuckets();
-    Node<T> bucket = this.buckets.get(bucketIndex);
-    if (bucket == null) {
-      // recursively initialize parent bucket if it doesn't already exist. modulo
-      initialize_bucket(bucketIndex);
+    boolean retry = true;
+    int numBuckets = this.buckets.currentTable.getStamp();
+    int bucketIndex = data.hashCode() % numBuckets;
+    while (retry) {
+
+      if (this.buckets.get(bucketIndex) == null) {
+        // recursively initialize parent bucket if it doesn't already exist. modulo
+        initialize_bucket(bucketIndex);
+      }
+
+      Node<T> result = this.lockFreeList.deleteAfter(this.buckets.get(bucketIndex), new Node<T>(data, false));
+      if (result == null) {
+        if (this.find(data)) {
+          bucketIndex = getParent(bucketIndex);
+          continue;
+        }
+        return false;
+      }
+      retry = false;
+      break;
     }
 
-    Node<T> result = this.lockFreeList.deleteAfter(this.buckets.get(bucketIndex), new Node<T>(data, false));
-    if (result == null) {
-      return false;
-    }
-    int localNumBuckets = numBuckets();
-    if ((double) (this.itemCount.decrementAndGet() / localNumBuckets) < MIN_LOAD) {
+    int localNumBuckets = this.buckets.currentTable.getStamp();
+    if ((double) (this.itemCount.decrementAndGet() / localNumBuckets) < (1 / MAX_LOAD)) {
       if (CONTRACT) {
         // System.out.println("Contracting");
-        this.buckets.contract();
+        this.buckets.contract(localNumBuckets);
       }
 
     }
@@ -200,27 +226,39 @@ public class SplitOrderHashMap<T> {
       removeUselessDummy();
     }
 
-    int bucketIndex = data.hashCode() % numBuckets();
-    // System.out.println("Inserting " + data + " at bucket " + bucketIndex);
+    boolean retry = true;
+    int numBuckets = this.buckets.currentTable.getStamp();
+    int bucketIndex = data.hashCode() % numBuckets;
+    while (retry) {
 
-    if (this.buckets.get(bucketIndex) == null) {
-      // System.out.println("Bucket " + bucketIndex + " does not exist.");
-      initialize_bucket(bucketIndex);
+      // System.out.println("Inserting " + data + " at bucket " + bucketIndex);
+
+      if (this.buckets.get(bucketIndex) == null) {
+        // System.out.println("Bucket " + bucketIndex + " does not exist.");
+        initialize_bucket(bucketIndex);
+      }
+
+      // fail to insertAt into the lockFreeList, return 0
+      Node<T> result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), new Node<T>(data, false));
+      if (result == null) {
+        if (!this.find(data)) {
+          bucketIndex = getParent(bucketIndex);
+          continue;
+        }
+        // System.out.println("Failed");
+        return false;
+      }
+      retry = false;
+      break;
     }
 
-    // fail to insertAt into the lockFreeList, return 0
-    Node<T> result = this.lockFreeList.insertAt(this.buckets.get(bucketIndex), new Node<T>(data, false));
-    if (result == null) {
-      // System.out.println("Could NOT insert " + data);
-      return false;
-    }
-
-    int localNumBuckets = numBuckets();
+    int localNumBuckets = this.buckets.currentTable.getStamp();
     // System.out.println(localNumBuckets);
     if ((double) (this.itemCount.incrementAndGet() / localNumBuckets) >= MAX_LOAD) {
       // System.out.println("Expand");
-      this.buckets.expand();
+      this.buckets.expand(localNumBuckets);
     }
+
     return true;
   }
 
@@ -233,10 +271,10 @@ public class SplitOrderHashMap<T> {
       Node<T> dummy = buckets.getUselessDummy();
       if (dummy != null) {
         // System.out.println("Removing " + dummy.bucket);
-        int parent = buckets.getOldParent(dummy.bucket);
+        int parent = getParent(dummy.bucket);
         Node<T> parentNode = this.buckets.get(parent);
         while (parentNode == null) {
-          parent = buckets.getOldParent(parent);
+          parent = getParent(parent);
           parentNode = this.buckets.get(parent);
         }
         this.lockFreeList.deleteAfter(this.buckets.get(parent), dummy);

@@ -42,23 +42,23 @@ public class Runner {
           hashmap.insert(i);
           // System.out.println(hashmap);
         }
-        for (int i = 0; i <= 2000; i++) {
-          hashmap.delete(i);
-          // System.out.println(hashmap);
-        }
+        // for (int i = 0; i <= 2000; i++) {
+        // hashmap.delete(i);
+        // // System.out.println(hashmap);
+        // }
       }
     };
 
     Thread u = new Thread() {
       public void run() {
-        for (int i = 30; i <= 1000; i++) {
+        for (int i = 900; i <= 2000; i++) {
           hashmap.insert(i);
           // System.out.println(hashmap);
         }
-        for (int i = 20; i <= 400; i++) {
-          hashmap.delete(i);
-          // System.out.println(hashmap);
-        }
+        // for (int i = 20; i <= 400; i++) {
+        // hashmap.delete(i);
+        // // System.out.println(hashmap);
+        // }
       }
     };
 
@@ -70,6 +70,12 @@ public class Runner {
     } catch (InterruptedException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
+    }
+
+    for (int i = 0; i <= 2000; i++) {
+      if (!hashmap.find(i)) {
+        System.out.print("Not found");
+      }
     }
 
     // hashmap.insert(1);
