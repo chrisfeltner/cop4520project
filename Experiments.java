@@ -447,7 +447,7 @@ public class Experiments {
 
 
 
-  public static void varyingOperationDistribution(int NUM_OPERATIONS, int MAX_THREADS, int MIN_NUM, int MAX_NUM,
+  public static void varyingOperationDistribution(int NUM_REPEATS, int NUM_OPERATIONS, int MAX_THREADS, int MIN_NUM, int MAX_NUM,
                                                   double percentGet, double percentInsert, double percentRemove, String csvName) throws Exception
   {
 
@@ -468,142 +468,91 @@ public class Experiments {
       sb.append(",");
       sb.append("LogOperationsPerMilliSecond");
       sb.append('\n');
-
-
-
-      SplitOrderHashMap<Integer> map16 = new SplitOrderHashMap<Integer>(16);
-
-      RefinableHashSet<Integer> rMap16 = new RefinableHashSet<>(16);
-
-      ConcurrentHashMap<Integer, Integer> cMap16 = new ConcurrentHashMap<>(16, 2);
-
-      ConcurrentSkipListSet<Integer> csMap1 = new ConcurrentSkipListSet<Integer>();
-
-      ArrayList<SplitOrderHashMap<Integer>> maps = new ArrayList<>(Arrays.asList(map16));
-      ArrayList<RefinableHashSet<Integer>> rMaps = new ArrayList<>(Arrays.asList(rMap16));
-      ArrayList<ConcurrentHashMap<Integer, Integer>> cMaps = new ArrayList<>(Arrays.asList(cMap16));
-      ArrayList<ConcurrentSkipListSet<Integer>> csMaps = new ArrayList<>(Arrays.asList(csMap1));
-
-      //ArrayList<SplitOrderHashMap> maps = new ArrayList<>(Arrays.asList(map2, map4, map8, map16));
-
-      ArrayList<Integer> data1 = new ArrayList<>();
-      ArrayList<Integer> operations1 = new ArrayList<>();
-
-      Random rng = new Random();
-
-      for (int j = 0; j < NUM_OPERATIONS; j++) {
-        data1.add(rng.nextInt(MAX_NUM - MIN_NUM + 1) + MIN_NUM);
-        double nextDouble = rng.nextDouble();
-        int randomOp;
-        // factor in distribution of operations defined above when picking ops
-        if (nextDouble < percentGet) {
-          randomOp = 0;
-        }
-        else if (nextDouble <= percentGet + percentInsert) {
-          randomOp = 1;
-        } else {
-          randomOp = 2;
-        }
-        //System.out.println(randomOp);
-        operations1.add(randomOp);
-      }
       int mapIndex = 0;
-      for (SplitOrderHashMap<Integer> map : maps) {
-        for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
+      int repeat = 0;
 
-          ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-          int start = 0;
-          int end = start + (NUM_OPERATIONS / numThreads);
-          long startTime;
-          long elapsedTime;
-          // start stopwatch for experiment
-          startTime = System.nanoTime();
+      while (repeat < NUM_REPEATS)
+      {
+        SplitOrderHashMap<Integer> map16 = new SplitOrderHashMap<Integer>(16);
 
-          for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+        RefinableHashSet<Integer> rMap16 = new RefinableHashSet<>(16);
 
-            executor.execute(new IndividualExperiment(map, data1.subList(start, end), operations1.subList(start, end)));
-            start = end;
-            end = end + (int) (NUM_OPERATIONS / numThreads);
-            // set end to last index of operations list if last thread
-            if (threadNum == numThreads - 2) end = NUM_OPERATIONS;
+        ConcurrentHashMap<Integer, Integer> cMap16 = new ConcurrentHashMap<>(16, 2);
+
+        ConcurrentSkipListSet<Integer> csMap1 = new ConcurrentSkipListSet<Integer>();
+
+        ArrayList<SplitOrderHashMap<Integer>> maps = new ArrayList<>(Arrays.asList(map16));
+        ArrayList<RefinableHashSet<Integer>> rMaps = new ArrayList<>(Arrays.asList(rMap16));
+        ArrayList<ConcurrentHashMap<Integer, Integer>> cMaps = new ArrayList<>(Arrays.asList(cMap16));
+        ArrayList<ConcurrentSkipListSet<Integer>> csMaps = new ArrayList<>(Arrays.asList(csMap1));
+
+        //ArrayList<SplitOrderHashMap> maps = new ArrayList<>(Arrays.asList(map2, map4, map8, map16));
+
+        ArrayList<Integer> data1 = new ArrayList<>();
+        ArrayList<Integer> operations1 = new ArrayList<>();
+
+        Random rng = new Random();
+
+        for (int j = 0; j < NUM_OPERATIONS; j++) {
+          data1.add(rng.nextInt(MAX_NUM - MIN_NUM + 1) + MIN_NUM);
+          double nextDouble = rng.nextDouble();
+          int randomOp;
+          // factor in distribution of operations defined above when picking ops
+          if (nextDouble < percentGet) {
+            randomOp = 0;
+          } else if (nextDouble <= percentGet + percentInsert) {
+            randomOp = 1;
+          } else {
+            randomOp = 2;
           }
-          // get end time and measure ops / ms
-          elapsedTime = System.nanoTime() - startTime;
-          double elapsedMilliSeconds = (double) elapsedTime / 1_000_000;
-          double opsPerMilliSecond = NUM_OPERATIONS / elapsedMilliSeconds;
-          executor.shutdown();
-          try
-          {
-            executor.awaitTermination(3, TimeUnit.SECONDS);
-          }
-          catch(InterruptedException e)
-          {
-            executor.shutdownNow();
-          }
-
-          sb.append(mapIndex);
-          sb.append(',');
-          sb.append(map.name);
-          sb.append(',');
-          sb.append(numThreads);
-          sb.append(',');
-          sb.append(opsPerMilliSecond);
-          sb.append(',');
-          sb.append(Math.log(opsPerMilliSecond));
-          sb.append('\n');
+          //System.out.println(randomOp);
+          operations1.add(randomOp);
         }
-        mapIndex++;
-      }
+        for (SplitOrderHashMap<Integer> map : maps) {
+          for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
 
-      for (RefinableHashSet<Integer> rMap : rMaps) {
-        for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
-          ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-          int start = 0;
-          int end = start + (NUM_OPERATIONS / numThreads);
-          long startTime;
-          long elapsedTime;
-          // start stopwatch for experiment
-          startTime = System.nanoTime();
+            ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+            int start = 0;
+            int end = start + (NUM_OPERATIONS / numThreads);
+            long startTime;
+            long elapsedTime;
+            // start stopwatch for experiment
+            startTime = System.nanoTime();
 
-          for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+            for (int threadNum = 0; threadNum < numThreads; threadNum++) {
 
-            executor.execute(new IndividualExperimentRefine(rMap, data1.subList(start, end), operations1.subList(start, end)));
-            start = end;
-            end = end + (int) (NUM_OPERATIONS / numThreads);
-            // set end to last index of operations list if last thread
-            if (threadNum == numThreads - 2) end = NUM_OPERATIONS;
+              executor.execute(new IndividualExperiment(map, data1.subList(start, end), operations1.subList(start, end)));
+              start = end;
+              end = end + (int) (NUM_OPERATIONS / numThreads);
+              // set end to last index of operations list if last thread
+              if (threadNum == numThreads - 2) end = NUM_OPERATIONS;
+            }
+            // get end time and measure ops / ms
+            elapsedTime = System.nanoTime() - startTime;
+            double elapsedMilliSeconds = (double) elapsedTime / 1_000_000;
+            double opsPerMilliSecond = NUM_OPERATIONS / elapsedMilliSeconds;
+            executor.shutdown();
+            try {
+              executor.awaitTermination(3, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+              executor.shutdownNow();
+            }
+
+            sb.append(mapIndex);
+            sb.append(',');
+            sb.append(map.name);
+            sb.append(',');
+            sb.append(numThreads);
+            sb.append(',');
+            sb.append(opsPerMilliSecond);
+            sb.append(',');
+            sb.append(Math.log(opsPerMilliSecond));
+            sb.append('\n');
           }
-          // get end time and measure ops / ms
-          elapsedTime = System.nanoTime() - startTime;
-          double elapsedMilliSeconds = (double) elapsedTime / 1_000_000;
-          double opsPerMilliSecond = NUM_OPERATIONS / elapsedMilliSeconds;
-          executor.shutdown();
-          try
-          {
-            executor.awaitTermination(3, TimeUnit.SECONDS);
-          }
-          catch(InterruptedException e)
-          {
-            executor.shutdownNow();
-          }
-
-          sb.append(mapIndex);
-          sb.append(',');
-          sb.append(rMap.name);
-          sb.append(',');
-          sb.append(numThreads);
-          sb.append(',');
-          sb.append(opsPerMilliSecond);
-          sb.append(',');
-          sb.append(Math.log(opsPerMilliSecond));
-          sb.append('\n');
+          mapIndex++;
         }
-        mapIndex++;
-      }
 
-      boolean concHashSet = true;
-      if (concHashSet) {
-        for (ConcurrentHashMap<Integer, Integer> cMap : cMaps) {
+        for (RefinableHashSet<Integer> rMap : rMaps) {
           for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
             ExecutorService executor = Executors.newFixedThreadPool(numThreads);
             int start = 0;
@@ -615,7 +564,7 @@ public class Experiments {
 
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
 
-              executor.execute(new IndividualExperimentConcurrentHashMap(cMap, data1.subList(start, end), operations1.subList(start, end)));
+              executor.execute(new IndividualExperimentRefine(rMap, data1.subList(start, end), operations1.subList(start, end)));
               start = end;
               end = end + (int) (NUM_OPERATIONS / numThreads);
               // set end to last index of operations list if last thread
@@ -626,18 +575,15 @@ public class Experiments {
             double elapsedMilliSeconds = (double) elapsedTime / 1_000_000;
             double opsPerMilliSecond = NUM_OPERATIONS / elapsedMilliSeconds;
             executor.shutdown();
-            try
-            {
+            try {
               executor.awaitTermination(3, TimeUnit.SECONDS);
-            }
-            catch(InterruptedException e)
-            {
+            } catch (InterruptedException e) {
               executor.shutdownNow();
             }
+
             sb.append(mapIndex);
             sb.append(',');
-            String ss = "concHashMap";
-            sb.append(ss);
+            sb.append(rMap.name);
             sb.append(',');
             sb.append(numThreads);
             sb.append(',');
@@ -648,61 +594,104 @@ public class Experiments {
           }
           mapIndex++;
         }
-      }
 
-      boolean concSkipListSet = true;
-      if (concSkipListSet) {
-        for (ConcurrentSkipListSet<Integer> csMap : csMaps) {
-          for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
-            ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-            int start = 0;
-            int end = start + (NUM_OPERATIONS / numThreads);
-            long startTime;
-            long elapsedTime;
-            // start stopwatch for experiment
-            startTime = System.nanoTime();
+        boolean concHashSet = true;
+        if (concHashSet) {
+          for (ConcurrentHashMap<Integer, Integer> cMap : cMaps) {
+            for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
+              ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+              int start = 0;
+              int end = start + (NUM_OPERATIONS / numThreads);
+              long startTime;
+              long elapsedTime;
+              // start stopwatch for experiment
+              startTime = System.nanoTime();
 
-            for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+              for (int threadNum = 0; threadNum < numThreads; threadNum++) {
 
-              executor.execute(new IndividualExperimentConcurrentSkipListSet(csMap, data1.subList(start, end), operations1.subList(start, end)));
-              start = end;
-              end = end + (int) (NUM_OPERATIONS / numThreads);
-              // set end to last index of operations list if last thread
-              if (threadNum == numThreads - 2) end = NUM_OPERATIONS;
+                executor.execute(new IndividualExperimentConcurrentHashMap(cMap, data1.subList(start, end), operations1.subList(start, end)));
+                start = end;
+                end = end + (int) (NUM_OPERATIONS / numThreads);
+                // set end to last index of operations list if last thread
+                if (threadNum == numThreads - 2) end = NUM_OPERATIONS;
+              }
+              // get end time and measure ops / ms
+              elapsedTime = System.nanoTime() - startTime;
+              double elapsedMilliSeconds = (double) elapsedTime / 1_000_000;
+              double opsPerMilliSecond = NUM_OPERATIONS / elapsedMilliSeconds;
+              executor.shutdown();
+              try {
+                executor.awaitTermination(3, TimeUnit.SECONDS);
+              } catch (InterruptedException e) {
+                executor.shutdownNow();
+              }
+              sb.append(mapIndex);
+              sb.append(',');
+              String ss = "concHashMap";
+              sb.append(ss);
+              sb.append(',');
+              sb.append(numThreads);
+              sb.append(',');
+              sb.append(opsPerMilliSecond);
+              sb.append(',');
+              sb.append(Math.log(opsPerMilliSecond));
+              sb.append('\n');
             }
-            // get end time and measure ops / ms
-            elapsedTime = System.nanoTime() - startTime;
-            double elapsedMilliSeconds = (double) elapsedTime / 1_000_000;
-            double opsPerMilliSecond = NUM_OPERATIONS / elapsedMilliSeconds;
-            executor.shutdown();
-            try
-            {
-              executor.awaitTermination(3, TimeUnit.SECONDS);
-            }
-            catch(InterruptedException e)
-            {
-              executor.shutdownNow();
-            }
-            sb.append(mapIndex);
-            sb.append(',');
-            String ss = "concSkipListSet";
-            sb.append(ss);
-            sb.append(',');
-            sb.append(numThreads);
-            sb.append(',');
-            sb.append(opsPerMilliSecond);
-            sb.append(',');
-            sb.append(Math.log(opsPerMilliSecond));
-            sb.append('\n');
+            mapIndex++;
           }
-          mapIndex++;
         }
+
+        boolean concSkipListSet = true;
+        if (concSkipListSet) {
+          for (ConcurrentSkipListSet<Integer> csMap : csMaps) {
+            for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
+              ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+              int start = 0;
+              int end = start + (NUM_OPERATIONS / numThreads);
+              long startTime;
+              long elapsedTime;
+              // start stopwatch for experiment
+              startTime = System.nanoTime();
+
+              for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+
+                executor.execute(new IndividualExperimentConcurrentSkipListSet(csMap, data1.subList(start, end), operations1.subList(start, end)));
+                start = end;
+                end = end + (int) (NUM_OPERATIONS / numThreads);
+                // set end to last index of operations list if last thread
+                if (threadNum == numThreads - 2) end = NUM_OPERATIONS;
+              }
+              // get end time and measure ops / ms
+              elapsedTime = System.nanoTime() - startTime;
+              double elapsedMilliSeconds = (double) elapsedTime / 1_000_000;
+              double opsPerMilliSecond = NUM_OPERATIONS / elapsedMilliSeconds;
+              executor.shutdown();
+              try {
+                executor.awaitTermination(3, TimeUnit.SECONDS);
+              } catch (InterruptedException e) {
+                executor.shutdownNow();
+              }
+              sb.append(mapIndex);
+              sb.append(',');
+              String ss = "concSkipListSet";
+              sb.append(ss);
+              sb.append(',');
+              sb.append(numThreads);
+              sb.append(',');
+              sb.append(opsPerMilliSecond);
+              sb.append(',');
+              sb.append(Math.log(opsPerMilliSecond));
+              sb.append('\n');
+            }
+            mapIndex++;
+          }
+        }
+
+
+        writer.write(sb.toString());
+        System.out.println("done with this experiment and printed results to csv!");
+        repeat += 1;
       }
-
-
-
-      writer.write(sb.toString());
-      System.out.println("done with this experiment and printed results to csv!");
 
     } catch (FileNotFoundException e) {
       System.out.println(e.getMessage());
@@ -712,26 +701,33 @@ public class Experiments {
   public static void main(String[] args) throws Exception {
     // use random libraries for uniform distribution of operations
     uniformOperationDistribution(100000, 32, 12000, 12222);
-    varyingOperationDistribution(100000, 32, 54300, 54400,
+    varyingOperationDistribution(10,100000, 32,
+            54300, 54400,
             (1./3), (1./3), (1./3), "thirdsDist.csv");
 
-    varyingOperationDistribution(100000, 32, 54300, 54430,
+    varyingOperationDistribution(10,100000, 32,
+            54300, 54430,
             (1./5), (2./5), (2./5), "20C-40A-40R.csv");
 
-    varyingOperationDistribution(100000, 32, 54300, 54430,
+    varyingOperationDistribution(10,100000, 32,
+            54300, 54430,
             (1./10), (45./100), (45./100), "10C-45A-45R.csv");
 
-    varyingOperationDistribution(100000, 32, 54300, 54430,
+    varyingOperationDistribution(10,100000, 32,
+            54300, 54430,
             (2./100), (49./100), (49./100), "2C-49A-49R.csv");
 
-    varyingOperationDistribution(100000, 32, 54300, 54430,
+    varyingOperationDistribution(10,100000, 32,
+            54300, 54430,
             (2./5), (2./5), (1./5), "40C-40A-20R.csv");
 
-    varyingOperationDistribution(100000, 32, 54300, 54430,
+    varyingOperationDistribution(10,100000, 32,
+            54300, 54430,
             (1./5), (3./5), (1./5), "20C-60A-20R.csv");
 
-    varyingOperationDistribution(100000, 32, 54300, 54430,
-            (1./5), (3./5), (1./5), "10C-80A-10R.csv");
+    varyingOperationDistribution(10,100000, 32,
+            54300, 54430,
+            (1./10), (4./5), (1./10), "10C-80A-10R.csv");
   }
 
 }
