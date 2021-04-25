@@ -189,11 +189,9 @@ public class Experiments {
 
 
    */
-  public static void uniformOperationDistribution() throws Exception
+  public static void uniformOperationDistribution(int NUM_OPERATIONS, int MAX_THREADS, int MIN_NUM, int MAX_NUM) throws Exception
   {
-    int NUM_OPERATIONS = 100000;
-    int MAX_THREADS = 12;
-    int MAX_NUM = 100;
+
     try (PrintWriter writer = new PrintWriter(new File("LoadFactorTest.csv"))) {
       // initialize results CSV
       StringBuilder sb = new StringBuilder();
@@ -238,7 +236,7 @@ public class Experiments {
       Random rng = new Random();
 
       for (int j = 0; j < NUM_OPERATIONS; j++) {
-        data1.add(rng.nextInt(MAX_NUM));
+        data1.add(rng.nextInt(MAX_NUM - MIN_NUM + 1) + MIN_NUM);
         int randomOp = rng.nextInt(3);
         //System.out.println(randomOp);
         operations1.add(randomOp);
@@ -449,21 +447,14 @@ public class Experiments {
 
 
 
-  public static void varyingOperationDistribution() throws Exception
+  public static void varyingOperationDistribution(int NUM_OPERATIONS, int MAX_THREADS, int MIN_NUM, int MAX_NUM,
+                                                  double percentGet, double percentInsert, double percentRemove) throws Exception
   {
-    int NUM_OPERATIONS = 100002;
 
-    double percentGet = (1./3);
-    double percentInsert = (1./3);
-    double percentRemove = (1./3);
     System.out.println("We are doing " + percentGet + "GET OPERATIONS");
     System.out.println("We are doing " + percentInsert + "INSERT OPERATIONS");
     System.out.println("We are doing " + percentRemove + "REMOVE OPERATIONS");
 
-
-    int MAX_THREADS = 16;
-    int MIN_NUM = 120000;
-    int MAX_NUM = 122000;
     try (PrintWriter writer = new PrintWriter(new File("varyingOperationDistribution.csv"))) {
       // initialize results CSV
       StringBuilder sb = new StringBuilder();
@@ -474,7 +465,10 @@ public class Experiments {
       sb.append("Threads");
       sb.append(",");
       sb.append("OperationsPerMilliSecond");
+      sb.append(",");
+      sb.append("LogOperationsPerMilliSecond");
       sb.append('\n');
+
 
 
       SplitOrderHashMap<Integer> map16 = new SplitOrderHashMap<Integer>(16);
@@ -499,8 +493,18 @@ public class Experiments {
 
       for (int j = 0; j < NUM_OPERATIONS; j++) {
         data1.add(rng.nextInt(MAX_NUM - MIN_NUM + 1) + MIN_NUM);
-        int randomOp = rng.nextInt(3);
-        System.out.println(randomOp);
+        double nextDouble = rng.nextDouble();
+        int randomOp;
+        // factor in distribution of operations defined above when picking ops
+        if (nextDouble < percentGet) {
+          randomOp = 0;
+        }
+        else if (nextDouble <= percentGet + percentInsert) {
+          randomOp = 1;
+        } else {
+          randomOp = 2;
+        }
+        //System.out.println(randomOp);
         operations1.add(randomOp);
       }
       int mapIndex = 0;
@@ -544,8 +548,9 @@ public class Experiments {
           sb.append(numThreads);
           sb.append(',');
           sb.append(opsPerMilliSecond);
+          sb.append(',');
+          sb.append(Math.log(opsPerMilliSecond));
           sb.append('\n');
-
         }
         mapIndex++;
       }
@@ -596,7 +601,7 @@ public class Experiments {
         mapIndex++;
       }
 
-      boolean concHashSet = false;
+      boolean concHashSet = true;
       if (concHashSet) {
         for (ConcurrentHashMap<Integer, Integer> cMap : cMaps) {
           for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
@@ -706,7 +711,9 @@ public class Experiments {
 
   public static void main(String[] args) throws Exception {
     // use random libraries for uniform distribution of operations
-    uniformOperationDistribution();
+    uniformOperationDistribution(100000, 32, 12000, 12222);
+    varyingOperationDistribution(100000, 32, 54300, 54300,
+            (1./3), (1./3), (1./3));
   }
 
 }
