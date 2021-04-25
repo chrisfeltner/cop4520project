@@ -513,7 +513,7 @@ public class Experiments {
 
       while (repeat < NUM_REPEATS)
       {
-        SplitOrderHashMap<Integer> map16 = new SplitOrderHashMap<Integer>(16);
+        SplitOrderHashMap<Integer> map16 = new SplitOrderHashMap<Integer>(8);
 
         RefinableHashSet<Integer> rMap16 = new RefinableHashSet<>(16);
 
