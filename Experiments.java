@@ -712,11 +712,26 @@ public class Experiments {
   public static void main(String[] args) throws Exception {
     // use random libraries for uniform distribution of operations
     uniformOperationDistribution(100000, 32, 12000, 12222);
-    varyingOperationDistribution(100000, 32, 54300, 54300,
+    varyingOperationDistribution(100000, 32, 54300, 54400,
             (1./3), (1./3), (1./3), "thirdsDist.csv");
 
-    varyingOperationDistribution(100000, 32, 54300, 54300,
-            (1./5), (2./5), (2./5), "204040.csv");
+    varyingOperationDistribution(100000, 32, 54300, 54430,
+            (1./5), (2./5), (2./5), "20C-40A-40R.csv");
+
+    varyingOperationDistribution(100000, 32, 54300, 54430,
+            (1./10), (45./100), (45./100), "10C-45A-45R.csv");
+
+    varyingOperationDistribution(100000, 32, 54300, 54430,
+            (2./100), (49./100), (49./100), "2C-49A-49R.csv");
+
+    varyingOperationDistribution(100000, 32, 54300, 54430,
+            (2./5), (2./5), (1./5), "40C-40A-20R.csv");
+
+    varyingOperationDistribution(100000, 32, 54300, 54430,
+            (1./5), (3./5), (1./5), "20C-60A-20R.csv");
+
+    varyingOperationDistribution(100000, 32, 54300, 54430,
+            (1./5), (3./5), (1./5), "10C-80A-10R.csv");
   }
 
 }
