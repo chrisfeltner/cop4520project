@@ -145,16 +145,20 @@ public class SplitOrderHashMap<T> {
     }
     boolean retry = true;
     Node<T> curr = null;
+    int numBuckets = this.buckets.currentTable.getStamp();
+    int bucketIndex = data.hashCode() % numBuckets;
     while (retry) {
-      int numBuckets = this.buckets.currentTable.getStamp();
-      int bucketIndex = data.hashCode() % numBuckets;
       Node<T> bucket = this.buckets.get(bucketIndex);
       if (bucket == null) {
         // recursively initialize parent bucket if it doesn't already exist. modulo
         initialize_bucket(bucketIndex);
       }
 
-      Window<T> window = this.lockFreeList.findAfter(this.buckets.get(bucketIndex), new Node<T>(data, false));
+      if (bucket == null) {
+        bucketIndex = getParent(bucketIndex);
+        continue;
+      }
+      Window<T> window = this.lockFreeList.findAfter(bucket, new Node<T>(data, false));
       curr = window.curr;
       if (curr == null) {
         if (numBuckets != this.buckets.currentTable.getStamp()) {
