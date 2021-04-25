@@ -17,6 +17,24 @@ public class LockFreeList<T> {
     this.curr = head;
   }
 
+  public boolean contains(Node<T> head, Node<T> nodeToFind) {
+    boolean[] marked = { false };
+    int key = nodeToFind.key;
+    Node<T> curr = head;
+    if (head.next.getReference() == null) {
+      return false;
+    }
+    while (Integer.compareUnsigned(curr.key, nodeToFind.key) < 0) {
+      curr = curr.next.getReference();
+      if (curr == null) {
+        return false;
+      }
+      Node<T> succ = curr.next.get(marked);
+    }
+    return (Integer.compareUnsigned(curr.key, key) == 0 && !marked[0]);
+  }
+
+
   /**
    * Check if a key is in the list.
    *
