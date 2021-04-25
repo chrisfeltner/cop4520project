@@ -177,8 +177,18 @@ public class SplitOrderHashMap<T> {
   }
 
   public boolean contains(T data) {
-    return this.lockFreeList.contains(this.lockFreeList.head, new Node<T>(data, false));
+    int numBuckets = this.buckets.currentTable.getStamp();
+
+    int bucketIndex = data.hashCode() % numBuckets;
+    
+    while (bucketIndex < numBuckets && this.buckets.get(bucketIndex) == null) {
+      // System.out.println("Bucket " + bucketIndex + " does not exist.");
+      initialize_bucket(bucketIndex);
+    }
+
+    return this.lockFreeList.contains(this.buckets.get(bucketIndex), new Node<T>(data, false));
   }
+
 
 
     /**
