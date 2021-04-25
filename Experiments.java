@@ -1,11 +1,51 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.*;
+
+class IndividualExperimentHashSet implements Runnable
+{
+  public static final int FIND = 0;
+  public static final int INSERT = 1;
+  public static final int DELETE = 2;
+
+  List<Integer> data;
+  List<Integer> operations;
+  Set<Integer> map;
+
+  public IndividualExperimentHashSet(Set<Integer> map1, List<Integer> data1, List<Integer> operations1)
+  {
+    data = data1;
+    operations = operations1;
+    map = map1;
+  }
+
+  public void run()
+  {
+    if(operations.size() != data.size())
+    {
+      System.out.println("Bad test formatting");
+      return;
+    }
+
+    for(int i = 0; i < operations.size(); i++)
+    {
+      Integer currentOperation = operations.get(i);
+      Integer currentValue = data.get(i);
+
+      if(currentOperation == FIND)
+        this.map.contains(currentValue);
+      else if (currentOperation == INSERT)
+        this.map.add(currentValue);
+      else if (currentOperation == DELETE)
+        this.map.remove(currentValue);
+      else
+        System.out.println("WOAH!! ERROR! INVALID OPERATION " + currentOperation);
+      }
+  }
+}
+
 
 class IndividualExperiment implements Runnable
 {
@@ -45,7 +85,7 @@ class IndividualExperiment implements Runnable
         this.map.delete(currentValue);
       else
         System.out.println("WOAH!! ERROR! INVALID OPERATION " + currentOperation);
-      }
+    }
   }
 }
 
@@ -481,10 +521,13 @@ public class Experiments {
 
         ConcurrentSkipListSet<Integer> csMap1 = new ConcurrentSkipListSet<Integer>();
 
+        Set<Integer> shMap = Collections.synchronizedSet(new HashSet<Integer>());
+
         ArrayList<SplitOrderHashMap<Integer>> maps = new ArrayList<>(Arrays.asList(map16));
         ArrayList<RefinableHashSet<Integer>> rMaps = new ArrayList<>(Arrays.asList(rMap16));
         ArrayList<ConcurrentHashMap<Integer, Integer>> cMaps = new ArrayList<>(Arrays.asList(cMap16));
         ArrayList<ConcurrentSkipListSet<Integer>> csMaps = new ArrayList<>(Arrays.asList(csMap1));
+        ArrayList<Set<Integer>> shMaps = new ArrayList<>(Arrays.asList(shMap));
 
         //ArrayList<SplitOrderHashMap> maps = new ArrayList<>(Arrays.asList(map2, map4, map8, map16));
 
@@ -687,7 +730,51 @@ public class Experiments {
           }
         }
 
+        boolean syncHash = true;
+        if (syncHash) {
+          for (Set<Integer> sMap : shMaps) {
+            for (int numThreads = 1; numThreads < MAX_THREADS; numThreads++) {
+              ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+              int start = 0;
+              int end = start + (NUM_OPERATIONS / numThreads);
+              long startTime;
+              long elapsedTime;
+              // start stopwatch for experiment
+              startTime = System.nanoTime();
 
+              for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+
+                executor.execute(new IndividualExperimentHashSet(sMap, data1.subList(start, end), operations1.subList(start, end)));
+                start = end;
+                end = end + (int) (NUM_OPERATIONS / numThreads);
+                // set end to last index of operations list if last thread
+                if (threadNum == numThreads - 2) end = NUM_OPERATIONS;
+              }
+              // get end time and measure ops / ms
+              elapsedTime = System.nanoTime() - startTime;
+              double elapsedMilliSeconds = (double) elapsedTime / 1_000_000;
+              double opsPerMilliSecond = NUM_OPERATIONS / elapsedMilliSeconds;
+              executor.shutdown();
+              try {
+                executor.awaitTermination(3, TimeUnit.SECONDS);
+              } catch (InterruptedException e) {
+                executor.shutdownNow();
+              }
+              sb.append(mapIndex);
+              sb.append(',');
+              String ss = "syncHashSet";
+              sb.append(ss);
+              sb.append(',');
+              sb.append(numThreads);
+              sb.append(',');
+              sb.append(opsPerMilliSecond);
+              sb.append(',');
+              sb.append(Math.log(opsPerMilliSecond));
+              sb.append('\n');
+            }
+            mapIndex++;
+          }
+        }
         writer.write(sb.toString());
         System.out.println("done with this experiment and printed results to csv!");
         repeat += 1;
