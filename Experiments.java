@@ -495,7 +495,7 @@ public class Experiments {
     System.out.println("We are doing " + percentInsert + "INSERT OPERATIONS");
     System.out.println("We are doing " + percentRemove + "REMOVE OPERATIONS");
 
-    try (PrintWriter writer = new PrintWriter(new File(csvName))) {
+    try (PrintWriter writer = new PrintWriter(new File("csvs/" + csvName))) {
       // initialize results CSV
       StringBuilder sb = new StringBuilder();
       sb.append("num_map");
@@ -790,7 +790,7 @@ public class Experiments {
     uniformOperationDistribution(100000, 32, 12000, 12222);
     varyingOperationDistribution(10,100000, 32,
             54300, 54400,
-            (1./3), (1./3), (1./3), "thirdsDist.csv");
+            (1./3), (1./3), (1./3), "33C-33A-33R.csv");
 
     varyingOperationDistribution(10,100000, 32,
             54300, 54430,
