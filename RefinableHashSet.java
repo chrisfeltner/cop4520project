@@ -3,10 +3,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class RefinableHashSet<T> extends BaseHashSet<T> 
+public class RefinableHashSet<T> extends BaseHashSet<T>
 {
     AtomicMarkableReference<Thread> owner;
     volatile ReentrantLock[] locks;
+    String name;
 
     public RefinableHashSet(int capacity) {
         super(capacity);
@@ -16,7 +17,7 @@ public class RefinableHashSet<T> extends BaseHashSet<T>
         {
             locks[i] = new ReentrantLock();
         }
-
+        this.name = "Refinable" + capacity;
         owner = new AtomicMarkableReference<Thread>(null, false);
     }
 
@@ -38,7 +39,7 @@ public class RefinableHashSet<T> extends BaseHashSet<T>
             oldLock.lock();
             who = owner.get(mark);
 
-            if((!mark[0] || who == me) && locks == oldLocks) 
+            if((!mark[0] || who == me) && locks == oldLocks)
             {
                 return;
             }
@@ -49,7 +50,7 @@ public class RefinableHashSet<T> extends BaseHashSet<T>
     }
 
     @Override
-    public void release(T x) 
+    public void release(T x)
     {
         locks[x.hashCode() % locks.length].unlock();
     }
@@ -111,7 +112,7 @@ public class RefinableHashSet<T> extends BaseHashSet<T>
         for(ReentrantLock lock : locks) {
             while(lock.isLocked())
             {
-                
+
             }
         }
     }
@@ -208,11 +209,11 @@ abstract class BaseHashSet<T> {
     }
 
 
-    
 
-    
+
+
     public abstract void acquire(T x);
-    
+
     public abstract void release(T x);
 
     public abstract void resize();

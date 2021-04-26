@@ -17,6 +17,24 @@ public class LockFreeList<T> {
     this.curr = head;
   }
 
+  public boolean contains(Node<T> head, Node<T> nodeToFind) {
+    boolean[] marked = { false };
+    int key = nodeToFind.key;
+    Node<T> curr = head;
+    if (head.next.getReference() == null) {
+      return false;
+    }
+    while (Integer.compareUnsigned(curr.key, nodeToFind.key) < 0) {
+      curr = curr.next.getReference();
+      if (curr == null) {
+        return false;
+      }
+      Node<T> succ = curr.next.get(marked);
+    }
+    return (Integer.compareUnsigned(curr.key, key) == 0 && !marked[0]);
+  }
+
+
   /**
    * Check if a key is in the list.
    *
@@ -43,6 +61,7 @@ public class LockFreeList<T> {
       pred = head;
       if (pred == null) {
         System.out.println("PRED IS NULL???????");
+        return new Window<T>(null, null);
       }
       curr = pred.next.getReference();
       while (true) {
@@ -54,6 +73,11 @@ public class LockFreeList<T> {
           snip = pred.next.compareAndSet(curr, succ, false, false);
           if (!snip) {
             continue retry;
+          }
+          // Since we do not use a sentinel node for the tail, check if
+          // we are at the end of the list
+          if (succ == null) {
+            return new Window<T>(curr, succ);
           }
           curr = succ;
           succ = curr.next.get(marked);
@@ -87,11 +111,20 @@ public class LockFreeList<T> {
    * @return Node that was inserted
    */
   public Node<T> insertAt(Node<T> head, Node<T> toInsert) {
+    if (head == null) {
+      System.out.println("Insert requires a head.");
+      return null;
+    }
+    if (toInsert == null) {
+      System.out.println("Insert requires a node to insert.");
+      return null;
+    }
     while (true) {
       Window<T> window = findAfter(head, toInsert);
       Node<T> pred = window.pred;
       Node<T> curr = window.curr;
       if (curr != null && Integer.compareUnsigned(curr.key, toInsert.key) == 0) {
+        // System.out.println("Duplicate entry");
         return null;
       } else {
         toInsert.next.set(curr, false);
@@ -122,12 +155,20 @@ public class LockFreeList<T> {
    * @return Node that was deleted
    */
   public Node<T> deleteAfter(Node<T> head, Node<T> toDelete) {
+    if (toDelete == null) {
+      System.out.println("Delete requires a node to delete.");
+      return null;
+    }
+    if (head == null) {
+      System.out.println("Delete requires a head node.");
+      return null;
+    }
     boolean snip;
     while (true) {
       Window<T> window = findAfter(head, toDelete);
       Node<T> pred = window.pred;
       Node<T> curr = window.curr;
-      if (Integer.compareUnsigned(curr.key, toDelete.key) != 0) {
+      if (curr == null || Integer.compareUnsigned(curr.key, toDelete.key) != 0) {
         return null;
       } else {
         Node<T> succ = curr.next.getReference();
@@ -141,9 +182,6 @@ public class LockFreeList<T> {
     }
   }
 
-  /**
-   * Returns a string representation of the list.
-   */
   public String toString() {
     Node<T> current = this.head;
     String string = "";

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="eec1bbb6-80c9-4c5e-8ae9-e0fa8c02d397" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/10C-45A-45R.csv" beforeDir="false" afterPath="$PROJECT_DIR$/10C-45A-45R.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/10C-80A-10R.csv" beforeDir="false" afterPath="$PROJECT_DIR$/10C-80A-10R.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/20C-40A-40R.csv" beforeDir="false" afterPath="$PROJECT_DIR$/20C-40A-40R.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/20C-60A-20R.csv" beforeDir="false" afterPath="$PROJECT_DIR$/20C-60A-20R.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/2C-49A-49R.csv" beforeDir="false" afterPath="$PROJECT_DIR$/2C-49A-49R.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/40C-40A-20R.csv" beforeDir="false" afterPath="$PROJECT_DIR$/40C-40A-20R.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LoadFactorTest.csv" beforeDir="false" afterPath="$PROJECT_DIR$/LoadFactorTest.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SplitOrderHashMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/SplitOrderHashMap.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graphCsv3-averaging.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/graphCsv3-averaging.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/thirdsDist.csv" beforeDir="false" afterPath="$PROJECT_DIR$/thirdsDist.csv" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1qwdau8YT0VXYxeKMtfp1d426Bl" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="Downloaded.Files.Path.Enabled" value="false" />
+    <property name="Repository.Attach.Annotations" value="false" />
+    <property name="Repository.Attach.JavaDocs" value="false" />
+    <property name="Repository.Attach.Sources" value="false" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_package_manager_path" value="npm" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Application.Experiments">
+    <configuration name="Experiments" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Experiments" />
+      <module name="cop4520project" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Runner" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Runner" />
+      <module name="cop4520project" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Tests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="cop4520project" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="Tests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Tests.testInsert1" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="cop4520project" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="Tests" />
+      <option name="METHOD_NAME" value="testInsert1" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Tests.testInsert3" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="cop4520project" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="Tests" />
+      <option name="METHOD_NAME" value="testInsert3" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Unnamed" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+      <module name="cop4520project" />
+      <option name="MAIN_CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.Experiments" />
+      <item itemvalue="Application.Runner" />
+      <item itemvalue="JUnit.Unnamed" />
+      <item itemvalue="JUnit.Tests.testInsert3" />
+      <item itemvalue="JUnit.Tests" />
+      <item itemvalue="JUnit.Tests.testInsert1" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.Experiments" />
+        <item itemvalue="Application.Runner" />
+        <item itemvalue="JUnit.Tests" />
+        <item itemvalue="JUnit.Tests.testInsert1" />
+        <item itemvalue="JUnit.Tests.testInsert3" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="eec1bbb6-80c9-4c5e-8ae9-e0fa8c02d397" name="Default Changelist" comment="" />
+      <created>1617994652957</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1617994652957</updated>
+      <workItem from="1617994654166" duration="4374000" />
+      <workItem from="1618894227849" duration="21221000" />
+      <workItem from="1619025626542" duration="599000" />
+      <workItem from="1619199490228" duration="12204000" />
+      <workItem from="1619286221027" duration="6596000" />
+      <workItem from="1619304480305" duration="11413000" />
+      <workItem from="1619360805571" duration="5037000" />
+      <workItem from="1619382777338" duration="993000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/LockFreeList.java</url>
+          <line>62</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/SplitOrderHashMap.java</url>
+          <line>171</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/SegmentTable.java</url>
+          <line>53</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/SegmentTable.java</url>
+          <line>48</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/SegmentTable.java</url>
+          <line>40</line>
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

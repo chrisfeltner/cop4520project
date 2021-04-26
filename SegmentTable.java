@@ -19,7 +19,7 @@ public class SegmentTable<T> {
     // Upon creation of segment table make segment 0 active for dummy node 0
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = new AtomicReferenceArray<>(1);
     outerArray.set(0, new AtomicReferenceArray<Segment<T>>(MIDDLE_SIZE));
-    outerArray.get(0).set(0, new Segment(SEGMENT_SIZE));
+    outerArray.get(0).set(0, new Segment<T>(SEGMENT_SIZE));
     currentTable = new AtomicStampedReference<AtomicReferenceArray<AtomicReferenceArray<Segment<T>>>>(outerArray, 1);
     oldTable = new AtomicStampedReference<AtomicReferenceArray<AtomicReferenceArray<Segment<T>>>>(null, 0);
     oldTableCounter = new AtomicInteger(-1);
@@ -34,8 +34,10 @@ public class SegmentTable<T> {
   public Node<T> get(int bucket) {
     int[] stampHolder = { 0 };
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = this.currentTable.get(stampHolder);
+
     // Check if the bucket is within the current size
     if (bucket > stampHolder[0]) {
+      // System.out.println("Bucket > numBuckets");
       return null;
     }
     int outerIndex = bucket / (MIDDLE_SIZE * SEGMENT_SIZE);
@@ -94,22 +96,31 @@ public class SegmentTable<T> {
     return seg.segment.compareAndSet(segmentIndex, null, dummyNode);
   }
 
-  public boolean expand() {
+  public boolean expand(int numBuckets) {
     int[] originalSize = { 0 };
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = this.currentTable.get(originalSize);
+    if (numBuckets != originalSize[0]) {
+      return false;
+    }
     int newSize = originalSize[0] * 2;
     int outerArraySize = (newSize / (MIDDLE_SIZE * SEGMENT_SIZE)) + 1;
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> newOuterArray = new AtomicReferenceArray<AtomicReferenceArray<Segment<T>>>(
         outerArraySize);
     for (int i = 0; i <= originalSize[0] / (MIDDLE_SIZE * SEGMENT_SIZE); i++) {
+
       newOuterArray.set(i, outerArray.get(i));
     }
+    // System.out.println(this.toString());
     return this.currentTable.compareAndSet(outerArray, newOuterArray, originalSize[0], newSize);
   }
 
-  public boolean contract() {
+  public boolean contract(int numBuckets) {
     int[] originalSize = { 0 };
     AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> outerArray = this.currentTable.get(originalSize);
+    if (numBuckets != originalSize[0]) {
+      // System.out.println("Size mismatch");
+      return false;
+    }
     if (originalSize[0] > 1) {
       int[] oldTableSize = { 0 };
       AtomicReferenceArray<AtomicReferenceArray<Segment<T>>> oldTable = this.oldTable.get(oldTableSize);
@@ -141,9 +152,12 @@ public class SegmentTable<T> {
         }
       }
 
-      boolean isOldTableSet = this.oldTable.compareAndSet(oldTable, outerArray, oldTableSize[0], originalSize[0]);
-
       boolean isNewTableSet = this.currentTable.compareAndSet(outerArray, newOuterArray, originalSize[0], newSize);
+      boolean isOldTableSet = false;
+
+      if (isNewTableSet) {
+        isOldTableSet = this.oldTable.compareAndSet(oldTable, outerArray, oldTableSize[0], originalSize[0]);
+      }
 
       if (isOldTableSet) {
         this.oldTableCounter.set(originalSize[0] - 1);
@@ -156,7 +170,7 @@ public class SegmentTable<T> {
 
   /**
    * Return the number of buckets (size of table)
-   * 
+   *
    * @return int number of buckets
    */
   public int numBuckets() {
@@ -165,7 +179,7 @@ public class SegmentTable<T> {
 
   /**
    * Gets the outer array index for the bucket number
-   * 
+   *
    * @param bucket number
    * @return outer array index
    */
@@ -175,7 +189,7 @@ public class SegmentTable<T> {
 
   /**
    * Gets the inner array index for the bucket number
-   * 
+   *
    * @param bucket
    * @param outerIndex
    * @return inner array index
@@ -187,7 +201,7 @@ public class SegmentTable<T> {
 
   /**
    * Gets the segment index for the bucket number
-   * 
+   *
    * @param bucket
    * @param outerIndex
    * @return segment index
@@ -222,7 +236,7 @@ public class SegmentTable<T> {
    * Returns a dummy that is eligible for deletion. Decrements the oldTableCounter
    * so that every operation returns a different dummy, and sets the counter to -1
    * when there are no more dummies to remove.
-   * 
+   *
    * @return Node<T> dummy to remove
    */
   public Node<T> getUselessDummy() {
@@ -241,7 +255,7 @@ public class SegmentTable<T> {
   /**
    * Get the bucket number of the parent from the old table. This may not be the
    * same as on the new table since the size is different.
-   * 
+   *
    * @param myBucket bucket to get parent for
    * @return int parent bucket number
    */
@@ -256,7 +270,7 @@ public class SegmentTable<T> {
 
   /**
    * toString for SegmentTable.
-   * 
+   *
    * @return String string representation of table
    */
   public String toString() {
